@@ -19,7 +19,9 @@ profiles:
       max_frames: 33
       fallback_workflow: videos/kenburns-slideshow
     upscale: [realesrgan-x4]
-    comfyui_args: ["--lowvram"]
+    # ComfyUI manages VRAM automatically; its README advises against "performance" flags
+    # such as --lowvram (they usually make things slower). Only CPU mode needs a flag.
+    comfyui_args: []
     comfyui_args_cpu: ["--cpu"]
     notes:
       - "CPU-Modus: SD 1.5 + LCM (6 Schritte) erzeugt ein 512²-Bild in ca. 1 Minute."

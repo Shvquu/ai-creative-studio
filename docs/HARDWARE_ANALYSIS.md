@@ -84,7 +84,7 @@ Definiert in `configs/hardware_profiles.yaml`, Auswahl in `backend/core/hardware
 | Bildmodelle | **SD 1.5 + LCM-LoRA** (2,3 GB, 6 Schritte), SD 1.5; SDXL nur ab 6 GB VRAM |
 | Auflösung | 512–768 px (lange Kante), danach Real-ESRGAN-Upscaling |
 | Videomodelle | Wan 2.1 T2V 1.3B nur mit GPU ≥ 6 GB (480p, max. 33 Frames) – **ohne GPU keine KI-Videos** |
-| Quantisierung | fp16-Checkpoints; ComfyUI mit `--lowvram` (GPU) bzw. `--cpu` |
+| Quantisierung | fp16-Checkpoints; ComfyUI ohne Zusatz-Flags (automatisches VRAM-Management), CPU-only mit `--cpu` |
 | Zu langsam | SDXL auf CPU (> 10 min/Bild), jede Videogenerierung auf CPU, FLUX/Z-Image |
 | Fallback | `videos/kenburns-slideshow`: Standbilder → Zoom/Pan → Übergänge → Musik/Untertitel |
 

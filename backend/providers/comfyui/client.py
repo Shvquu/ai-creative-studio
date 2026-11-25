@@ -329,7 +329,7 @@ class ComfyUIClient:
         if any(m in low for m in OOM_MARKERS):
             return GenerationError(
                 "Nicht genug Grafikspeicher (OOM). Auflösung/Frames reduzieren, ein kleineres Modell wählen "
-                "oder ComfyUI mit --lowvram starten.",
+                "oder andere Programme schließen, die Grafikspeicher belegen.",
                 details={"engine_error": detail},
             )
         return GenerationError(f"ComfyUI-Ausführung fehlgeschlagen: {detail or 'unbekannter Fehler'}",
