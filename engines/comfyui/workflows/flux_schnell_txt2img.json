@@ -1,0 +1,228 @@
+{
+  "meta": {
+    "id": "flux_schnell_txt2img",
+    "name": "FLUX.1 (fp8 Checkpoint) – Text-to-Image",
+    "task": "text_to_image",
+    "kind": "image",
+    "family": "flux1",
+    "description": "FLUX.1 schnell/dev als All-in-one-fp8-Checkpoint. cfg=1, kein Negativprompt.",
+    "parameters": {
+      "model": {
+        "targets": [
+          [
+            "4",
+            "ckpt_name"
+          ]
+        ],
+        "default": "flux1-schnell-fp8.safetensors"
+      },
+      "prompt": {
+        "targets": [
+          [
+            "6",
+            "text"
+          ]
+        ],
+        "required": true
+      },
+      "guidance": {
+        "targets": [
+          [
+            "10",
+            "guidance"
+          ]
+        ],
+        "default": 3.5
+      },
+      "width": {
+        "targets": [
+          [
+            "5",
+            "width"
+          ]
+        ],
+        "default": 1024
+      },
+      "height": {
+        "targets": [
+          [
+            "5",
+            "height"
+          ]
+        ],
+        "default": 1024
+      },
+      "batch_size": {
+        "targets": [
+          [
+            "5",
+            "batch_size"
+          ]
+        ],
+        "default": 1
+      },
+      "seed": {
+        "targets": [
+          [
+            "3",
+            "seed"
+          ]
+        ],
+        "default": 0
+      },
+      "steps": {
+        "targets": [
+          [
+            "3",
+            "steps"
+          ]
+        ],
+        "default": 4
+      },
+      "cfg": {
+        "targets": [
+          [
+            "3",
+            "cfg"
+          ]
+        ],
+        "default": 1.0
+      },
+      "sampler": {
+        "targets": [
+          [
+            "3",
+            "sampler_name"
+          ]
+        ],
+        "default": "euler"
+      },
+      "scheduler": {
+        "targets": [
+          [
+            "3",
+            "scheduler"
+          ]
+        ],
+        "default": "simple"
+      },
+      "filename_prefix": {
+        "targets": [
+          [
+            "9",
+            "filename_prefix"
+          ]
+        ],
+        "default": "acs/flux"
+      }
+    },
+    "lora_anchor": {
+      "model": [
+        "4",
+        0
+      ],
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "outputs": [
+      "9"
+    ]
+  },
+  "workflow": {
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "flux1-schnell-fp8.safetensors"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "10": {
+      "class_type": "FluxGuidance",
+      "inputs": {
+        "conditioning": [
+          "6",
+          0
+        ],
+        "guidance": 3.5
+      }
+    },
+    "7": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "6",
+          0
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "model": [
+          "4",
+          0
+        ],
+        "seed": 0,
+        "steps": 4,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "positive": [
+          "10",
+          0
+        ],
+        "negative": [
+          "7",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ],
+        "denoise": 1.0
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "3",
+          0
+        ],
+        "vae": [
+          "4",
+          2
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "8",
+          0
+        ],
+        "filename_prefix": "acs/flux"
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "id": "smoke_test_video",
+    "name": "Smoke-Test Video (ohne Modell)",
+    "task": "smoke_test",
+    "kind": "video",
+    "description": "Erzeugt ein kurzes einfarbiges MP4 – prüft die Video-Pipeline (CreateVideo/SaveVideo) ohne Modelle.",
+    "parameters": {
+      "width": {
+        "targets": [
+          [
+            "1",
+            "width"
+          ]
+        ],
+        "default": 64
+      },
+      "height": {
+        "targets": [
+          [
+            "1",
+            "height"
+          ]
+        ],
+        "default": 64
+      },
+      "frames": {
+        "targets": [
+          [
+            "1",
+            "batch_size"
+          ]
+        ],
+        "default": 16
+      },
+      "color": {
+        "targets": [
+          [
+            "1",
+            "color"
+          ]
+        ],
+        "default": 13395456
+      },
+      "fps": {
+        "targets": [
+          [
+            "2",
+            "fps"
+          ]
+        ],
+        "default": 8
+      },
+      "filename_prefix": {
+        "targets": [
+          [
+            "3",
+            "filename_prefix"
+          ]
+        ],
+        "default": "acs/smoke"
+      }
+    },
+    "outputs": [
+      "3"
+    ]
+  },
+  "workflow": {
+    "1": {
+      "class_type": "EmptyImage",
+      "inputs": {
+        "width": 64,
+        "height": 64,
+        "batch_size": 16,
+        "color": 13395456
+      }
+    },
+    "2": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "images": [
+          "1",
+          0
+        ],
+        "fps": 8
+      }
+    },
+    "3": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "video": [
+          "2",
+          0
+        ],
+        "filename_prefix": "acs/smoke",
+        "format": "mp4",
+        "format.codec": "h264"
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "id": "esrgan_upscale",
+    "name": "Real-ESRGAN Upscale",
+    "task": "upscale",
+    "kind": "image",
+    "description": "KI-Upscaling mit nativem Modellfaktor (4×), danach Lanczos auf den Zielfaktor.",
+    "parameters": {
+      "image": {
+        "targets": [
+          [
+            "1",
+            "image"
+          ]
+        ],
+        "required": true
+      },
+      "upscale_model": {
+        "targets": [
+          [
+            "2",
+            "model_name"
+          ]
+        ],
+        "default": "RealESRGAN_x4plus.safetensors"
+      },
+      "rescale": {
+        "targets": [
+          [
+            "4",
+            "scale_by"
+          ]
+        ],
+        "default": 1.0
+      },
+      "filename_prefix": {
+        "targets": [
+          [
+            "5",
+            "filename_prefix"
+          ]
+        ],
+        "default": "acs/upscale"
+      }
+    },
+    "uploads": [
+      "image"
+    ],
+    "outputs": [
+      "5"
+    ]
+  },
+  "workflow": {
+    "1": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": "example.png"
+      }
+    },
+    "2": {
+      "class_type": "UpscaleModelLoader",
+      "inputs": {
+        "model_name": "RealESRGAN_x4plus.safetensors"
+      }
+    },
+    "3": {
+      "class_type": "ImageUpscaleWithModel",
+      "inputs": {
+        "upscale_model": [
+          "2",
+          0
+        ],
+        "image": [
+          "1",
+          0
+        ]
+      }
+    },
+    "4": {
+      "class_type": "ImageScaleBy",
+      "inputs": {
+        "image": [
+          "3",
+          0
+        ],
+        "upscale_method": "lanczos",
+        "scale_by": 1.0
+      }
+    },
+    "5": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "4",
+          0
+        ],
+        "filename_prefix": "acs/upscale"
+      }
+    }
+  }
+}

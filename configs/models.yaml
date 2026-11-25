@@ -41,13 +41,15 @@ models:
     commercial_use: restricted
     license_note: Kommerzielle Nutzung erlaubt, aber mit Nutzungsbeschränkungen der OpenRAIL-Lizenz.
     tasks:
-      text_to_image: checkpoint_lcm_txt2img
+      text_to_image: checkpoint_txt2img
       image_to_image: checkpoint_img2img
       inpaint: checkpoint_inpaint
       outpaint: checkpoint_outpaint
     params:
       model: v1-5-pruned-emaonly-fp16.safetensors
-      lora: lcm-lora-sdv1-5.safetensors
+      sampling: lcm
+    extra_loras:
+      - {name: lcm-lora-sdv1-5.safetensors, strength: 1.0}
     defaults: {width: 512, height: 512, steps: 6, cfg: 1.5, sampler: lcm, scheduler: sgm_uniform}
     edit_defaults: {steps: 8, cfg: 1.5, sampler: lcm, scheduler: sgm_uniform}
     resolution_family: sd15

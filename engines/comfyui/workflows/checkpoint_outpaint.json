@@ -1,0 +1,309 @@
+{
+  "meta": {
+    "id": "checkpoint_outpaint",
+    "name": "Checkpoint – Outpainting",
+    "task": "outpaint",
+    "kind": "image",
+    "description": "Erweitert das Bild an den Rändern (Pixel links/oben/rechts/unten).",
+    "parameters": {
+      "model": {
+        "targets": [
+          [
+            "4",
+            "ckpt_name"
+          ]
+        ],
+        "required": true,
+        "description": "Checkpoint file in models/checkpoints"
+      },
+      "sampling": {
+        "targets": [
+          [
+            "12",
+            "sampling"
+          ]
+        ],
+        "default": "eps",
+        "description": "eps (SD1.5/SDXL) or lcm (with LCM-LoRA)"
+      },
+      "prompt": {
+        "targets": [
+          [
+            "6",
+            "text"
+          ]
+        ],
+        "required": true
+      },
+      "negative_prompt": {
+        "targets": [
+          [
+            "7",
+            "text"
+          ]
+        ],
+        "default": ""
+      },
+      "seed": {
+        "targets": [
+          [
+            "3",
+            "seed"
+          ]
+        ],
+        "default": 0
+      },
+      "steps": {
+        "targets": [
+          [
+            "3",
+            "steps"
+          ]
+        ],
+        "default": 25
+      },
+      "cfg": {
+        "targets": [
+          [
+            "3",
+            "cfg"
+          ]
+        ],
+        "default": 7.0
+      },
+      "sampler": {
+        "targets": [
+          [
+            "3",
+            "sampler_name"
+          ]
+        ],
+        "default": "dpmpp_2m"
+      },
+      "scheduler": {
+        "targets": [
+          [
+            "3",
+            "scheduler"
+          ]
+        ],
+        "default": "karras"
+      },
+      "filename_prefix": {
+        "targets": [
+          [
+            "9",
+            "filename_prefix"
+          ]
+        ],
+        "default": "acs/outpaint"
+      },
+      "image": {
+        "targets": [
+          [
+            "10",
+            "image"
+          ]
+        ],
+        "required": true
+      },
+      "left": {
+        "targets": [
+          [
+            "16",
+            "left"
+          ]
+        ],
+        "default": 0
+      },
+      "top": {
+        "targets": [
+          [
+            "16",
+            "top"
+          ]
+        ],
+        "default": 0
+      },
+      "right": {
+        "targets": [
+          [
+            "16",
+            "right"
+          ]
+        ],
+        "default": 0
+      },
+      "bottom": {
+        "targets": [
+          [
+            "16",
+            "bottom"
+          ]
+        ],
+        "default": 0
+      },
+      "feathering": {
+        "targets": [
+          [
+            "16",
+            "feathering"
+          ]
+        ],
+        "default": 40
+      },
+      "strength": {
+        "targets": [
+          [
+            "3",
+            "denoise"
+          ]
+        ],
+        "default": 1.0
+      }
+    },
+    "uploads": [
+      "image"
+    ],
+    "lora_anchor": {
+      "model": [
+        "4",
+        0
+      ],
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "outputs": [
+      "9"
+    ]
+  },
+  "workflow": {
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "v1-5-pruned-emaonly-fp16.safetensors"
+      }
+    },
+    "12": {
+      "class_type": "ModelSamplingDiscrete",
+      "inputs": {
+        "model": [
+          "4",
+          0
+        ],
+        "sampling": "eps",
+        "zsnr": false
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "10": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": "example.png"
+      }
+    },
+    "16": {
+      "class_type": "ImagePadForOutpaint",
+      "inputs": {
+        "image": [
+          "10",
+          0
+        ],
+        "left": 0,
+        "top": 0,
+        "right": 256,
+        "bottom": 0,
+        "feathering": 40
+      }
+    },
+    "11": {
+      "class_type": "VAEEncodeForInpaint",
+      "inputs": {
+        "pixels": [
+          "16",
+          0
+        ],
+        "vae": [
+          "4",
+          2
+        ],
+        "mask": [
+          "16",
+          1
+        ],
+        "grow_mask_by": 8
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "model": [
+          "12",
+          0
+        ],
+        "seed": 0,
+        "steps": 25,
+        "cfg": 7.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "positive": [
+          "6",
+          0
+        ],
+        "negative": [
+          "7",
+          0
+        ],
+        "latent_image": [
+          "11",
+          0
+        ],
+        "denoise": 1.0
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "3",
+          0
+        ],
+        "vae": [
+          "4",
+          2
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "8",
+          0
+        ],
+        "filename_prefix": "acs/outpaint"
+      }
+    }
+  }
+}

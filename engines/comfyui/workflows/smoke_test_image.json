@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "id": "smoke_test_image",
+    "name": "Smoke-Test Bild (ohne Modell)",
+    "task": "smoke_test",
+    "kind": "image",
+    "description": "Erzeugt ein einfarbiges Bild – prüft Queue, Ausführung und Download ohne Modelle.",
+    "parameters": {
+      "width": {
+        "targets": [
+          [
+            "1",
+            "width"
+          ]
+        ],
+        "default": 64
+      },
+      "height": {
+        "targets": [
+          [
+            "1",
+            "height"
+          ]
+        ],
+        "default": 64
+      },
+      "batch_size": {
+        "targets": [
+          [
+            "1",
+            "batch_size"
+          ]
+        ],
+        "default": 1
+      },
+      "color": {
+        "targets": [
+          [
+            "1",
+            "color"
+          ]
+        ],
+        "default": 3368652
+      },
+      "filename_prefix": {
+        "targets": [
+          [
+            "2",
+            "filename_prefix"
+          ]
+        ],
+        "default": "acs/smoke"
+      }
+    },
+    "outputs": [
+      "2"
+    ]
+  },
+  "workflow": {
+    "1": {
+      "class_type": "EmptyImage",
+      "inputs": {
+        "width": 64,
+        "height": 64,
+        "batch_size": 1,
+        "color": 3368652
+      }
+    },
+    "2": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "1",
+          0
+        ],
+        "filename_prefix": "acs/smoke"
+      }
+    }
+  }
+}
