@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ai-creative-studio": {
+      "type": "stdio",
+      "command": "${ACS_PYTHON:-.venv/bin/python}",
+      "args": ["-m", "mcp_server.server"],
+      "env": {
+        "ACS_MCP_BACKEND_URL": "${ACS_MCP_BACKEND_URL:-http://127.0.0.1:8420}",
+        "ACS_API_TOKEN": "${ACS_API_TOKEN:-}"
+      }
+    }
+  }
+}

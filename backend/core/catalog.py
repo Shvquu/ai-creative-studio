@@ -99,15 +99,10 @@ class Catalog:
     def find(self, model_id_or_file: str) -> CatalogModel | None:
         if model_id_or_file in self.models:
             return self.models[model_id_or_file]
-        for m in self.models.values():
-            if any(f.name == model_id_or_file for f in m.files):
-                # Prefer the plain variant (e.g. sd15 over sd15-lcm) when matched by file.
-                if m.params.get("model") == model_id_or_file and "lora" not in m.params:
-                    return m
-        for m in self.models.values():
-            if m.params.get("model") == model_id_or_file:
-                return m
-        return None
+        matches = [m for m in self.models.values() if m.params.get("model") == model_id_or_file]
+        # Prefer the plain variant (e.g. sd15 over sd15-lcm, which adds a LoRA) when matched by file name.
+        matches.sort(key=lambda m: (bool(m.extra_loras), m.params.get("sampling") not in (None, "eps")))
+        return matches[0] if matches else None
 
     def for_task(self, task: str) -> list[CatalogModel]:
         return [m for m in self.models.values() if task in m.tasks]

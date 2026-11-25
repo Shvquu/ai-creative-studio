@@ -1,0 +1,33 @@
+{
+  "title": "Nordlicht Kaffee – Launch-Spot",
+  "style": "cinematic",
+  "aspect_ratio": "16:9",
+  "transition": "fade",
+  "subtitles": true,
+  "scenes": [
+    {
+      "prompt": "Close-up of freshly roasted coffee beans tumbling in a drum roaster, wisps of smoke, warm amber light, shallow depth of field",
+      "duration_s": 3,
+      "camera": "dolly-in",
+      "caption": "Ehrlich geröstet."
+    },
+    {
+      "prompt": "A barista slowly pours steamed milk into a ceramic cup, forming latte art, cozy Scandinavian café, soft morning window light",
+      "duration_s": 4,
+      "camera": "static",
+      "caption": "Jeden Morgen frisch."
+    },
+    {
+      "prompt": "A coffee bag with a minimal aurora logo stands on a wooden counter next to a steaming cup, plants in the background, warm light",
+      "duration_s": 4,
+      "camera": "orbit",
+      "caption": "Direkt vom Röster."
+    },
+    {
+      "prompt": "Wide shot of a snowy Nordic street at blue hour, a warmly lit café window glowing, people inside chatting",
+      "duration_s": 4,
+      "camera": "crane-up",
+      "caption": "Nordlicht Kaffee"
+    }
+  ]
+}

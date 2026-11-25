@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledMcpjsonServers": ["ai-creative-studio"],
+  "permissions": {
+    "allow": [
+      "mcp__ai-creative-studio",
+      "Read(assets/**)",
+      "Bash(python -m backend.cli hardware:*)",
+      "Bash(python -m backend.cli check:*)",
+      "Bash(python -m backend.cli workflows:*)",
+      "Bash(.venv/bin/python -m backend.cli:*)",
+      "Bash(python scripts/models/download_models.py --list:*)",
+      "Bash(./check-system.sh:*)"
+    ],
+    "ask": [
+      "mcp__ai-creative-studio__organize_assets",
+      "Bash(python scripts/models/download_models.py --model:*)",
+      "Bash(python scripts/models/download_models.py --recommended:*)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(data/.cost_secret)"
+    ]
+  }
+}
