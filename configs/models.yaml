@@ -1,0 +1,395 @@
+# Model catalog – the single source of truth for downloadable models.
+#
+# All URLs, file names, folders and sizes were verified on 2026-11-25 against the
+# official ComfyUI workflow templates (comfyui-workflow-templates 0.11.118) and the
+# Hugging Face API. Licenses were read from the model cards.
+#
+# Fields:
+#   files[].folder      ComfyUI models sub-folder (checkpoints, diffusion_models, …)
+#   min_vram_gb         lowest VRAM that works with ComfyUI offloading (slow)
+#   rec_vram_gb         VRAM for comfortable speed
+#   min_ram_gb          system RAM needed to load the weights
+#   cpu_ok              usable on CPU-only systems (very slow)
+#   commercial_use      true | false | restricted   – read the license before selling results!
+#   tasks               task → ComfyUI template id (engines/comfyui/workflows/<id>.json)
+#   est_seconds         rough wall-clock estimates per output at default settings
+#                       (cpu value measured in this repo's CI container where marked)
+
+models:
+  # ----------------------------------------------------------------- IMAGE ---
+  - id: sd15-lcm
+    name: Stable Diffusion 1.5 + LCM-LoRA (schnell)
+    type: image
+    family: sd15
+    description: >-
+      SD 1.5 mit Latent-Consistency-LoRA: 4–8 Schritte statt 25. Beste Wahl für CPU
+      und GPUs mit wenig VRAM. Qualität geringer als SDXL/FLUX.
+    files:
+      - name: v1-5-pruned-emaonly-fp16.safetensors
+        folder: checkpoints
+        url: https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive/resolve/main/v1-5-pruned-emaonly-fp16.safetensors
+        size_gb: 2.13
+      - name: lcm-lora-sdv1-5.safetensors
+        folder: loras
+        url: https://huggingface.co/latent-consistency/lcm-lora-sdv1-5/resolve/main/pytorch_lora_weights.safetensors
+        size_gb: 0.135
+    min_vram_gb: 2
+    rec_vram_gb: 4
+    min_ram_gb: 8
+    cpu_ok: true
+    license: CreativeML OpenRAIL-M + OpenRAIL++ (LoRA)
+    commercial_use: restricted
+    license_note: Kommerzielle Nutzung erlaubt, aber mit Nutzungsbeschränkungen der OpenRAIL-Lizenz.
+    tasks:
+      text_to_image: checkpoint_lcm_txt2img
+      image_to_image: checkpoint_img2img
+      inpaint: checkpoint_inpaint
+      outpaint: checkpoint_outpaint
+    params:
+      model: v1-5-pruned-emaonly-fp16.safetensors
+      lora: lcm-lora-sdv1-5.safetensors
+    defaults: {width: 512, height: 512, steps: 6, cfg: 1.5, sampler: lcm, scheduler: sgm_uniform}
+    edit_defaults: {steps: 8, cfg: 1.5, sampler: lcm, scheduler: sgm_uniform}
+    resolution_family: sd15
+    est_seconds: {cpu: 60, low: 4, mid: 2, high: 1}
+
+  - id: sd15
+    name: Stable Diffusion 1.5
+    type: image
+    family: sd15
+    description: Klassisches, sehr leichtes Basismodell mit riesigem LoRA-Ökosystem. 512×512 nativ.
+    files:
+      - name: v1-5-pruned-emaonly-fp16.safetensors
+        folder: checkpoints
+        url: https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive/resolve/main/v1-5-pruned-emaonly-fp16.safetensors
+        size_gb: 2.13
+    min_vram_gb: 2
+    rec_vram_gb: 4
+    min_ram_gb: 8
+    cpu_ok: true
+    license: CreativeML OpenRAIL-M
+    commercial_use: restricted
+    license_note: Kommerzielle Nutzung erlaubt, aber mit Nutzungsbeschränkungen der OpenRAIL-Lizenz.
+    tasks:
+      text_to_image: checkpoint_txt2img
+      image_to_image: checkpoint_img2img
+      inpaint: checkpoint_inpaint
+      outpaint: checkpoint_outpaint
+    params:
+      model: v1-5-pruned-emaonly-fp16.safetensors
+    defaults: {width: 512, height: 512, steps: 25, cfg: 7.0, sampler: dpmpp_2m, scheduler: karras}
+    resolution_family: sd15
+    est_seconds: {cpu: 240, low: 15, mid: 5, high: 2}
+
+  - id: sdxl
+    name: Stable Diffusion XL 1.0 Base
+    type: image
+    family: sdxl
+    description: Solider Allrounder in 1024×1024 mit großem LoRA/ControlNet-Ökosystem.
+    files:
+      - name: sd_xl_base_1.0.safetensors
+        folder: checkpoints
+        url: https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors
+        size_gb: 6.94
+    min_vram_gb: 6
+    rec_vram_gb: 10
+    min_ram_gb: 16
+    cpu_ok: false
+    license: CreativeML OpenRAIL++-M
+    commercial_use: restricted
+    license_note: Kommerzielle Nutzung erlaubt, mit Nutzungsbeschränkungen der OpenRAIL++-Lizenz.
+    tasks:
+      text_to_image: checkpoint_txt2img
+      image_to_image: checkpoint_img2img
+      inpaint: checkpoint_inpaint
+      outpaint: checkpoint_outpaint
+    params:
+      model: sd_xl_base_1.0.safetensors
+    defaults: {width: 1024, height: 1024, steps: 30, cfg: 6.5, sampler: dpmpp_2m, scheduler: karras}
+    resolution_family: sdxl
+    est_seconds: {low: 60, mid: 15, high: 6}
+
+  - id: flux2-klein-4b
+    name: FLUX.2 [klein] 4B (distilled)
+    type: image
+    family: flux2
+    description: >-
+      Kompaktes FLUX.2-Modell (4 Schritte) mit sehr guter Prompt-Treue und Typografie.
+      Apache 2.0 – kommerziell nutzbar.
+    files:
+      - name: flux-2-klein-4b.safetensors
+        folder: diffusion_models
+        url: https://huggingface.co/Comfy-Org/flux2-klein/resolve/main/split_files/diffusion_models/flux-2-klein-4b.safetensors
+        size_gb: 7.75
+      - name: qwen_3_4b.safetensors
+        folder: text_encoders
+        url: https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors
+        size_gb: 8.05
+      - name: flux2-vae.safetensors
+        folder: vae
+        url: https://huggingface.co/Comfy-Org/flux2-klein/resolve/main/split_files/vae/flux2-vae.safetensors
+        size_gb: 0.34
+    min_vram_gb: 8
+    rec_vram_gb: 16
+    min_ram_gb: 32
+    cpu_ok: false
+    license: Apache-2.0
+    commercial_use: true
+    tasks:
+      text_to_image: flux2_klein_txt2img
+    params:
+      model: flux-2-klein-4b.safetensors
+      text_encoder: qwen_3_4b.safetensors
+      vae: flux2-vae.safetensors
+    defaults: {width: 1024, height: 1024, steps: 4, cfg: 1.0, sampler: euler}
+    resolution_family: flux
+    supports_negative_prompt: false
+    est_seconds: {mid: 15, high: 4}
+
+  - id: z-image-turbo
+    name: Z-Image Turbo
+    type: image
+    family: z-image
+    description: >-
+      Fotorealistisches 6B-Modell mit 8 Schritten, starke Text-Darstellung (EN/ZH).
+      Apache 2.0 – kommerziell nutzbar.
+    files:
+      - name: z_image_turbo_bf16.safetensors
+        folder: diffusion_models
+        url: https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors
+        size_gb: 12.31
+      - name: qwen_3_4b.safetensors
+        folder: text_encoders
+        url: https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors
+        size_gb: 8.05
+      - name: ae.safetensors
+        folder: vae
+        url: https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors
+        size_gb: 0.34
+    min_vram_gb: 12
+    rec_vram_gb: 16
+    min_ram_gb: 32
+    cpu_ok: false
+    license: Apache-2.0
+    commercial_use: true
+    tasks:
+      text_to_image: z_image_turbo_txt2img
+    params:
+      model: z_image_turbo_bf16.safetensors
+      text_encoder: qwen_3_4b.safetensors
+      vae: ae.safetensors
+    defaults: {width: 1024, height: 1024, steps: 8, cfg: 1.0, sampler: res_multistep, scheduler: simple}
+    resolution_family: flux
+    supports_negative_prompt: false
+    est_seconds: {mid: 30, high: 8}
+
+  - id: flux1-schnell
+    name: FLUX.1 [schnell] (fp8, all-in-one)
+    type: image
+    family: flux1
+    description: Schnelles 12B-FLUX-Modell (4 Schritte). Apache 2.0. Groß (17 GB) – braucht viel RAM.
+    files:
+      - name: flux1-schnell-fp8.safetensors
+        folder: checkpoints
+        url: https://huggingface.co/Comfy-Org/flux1-schnell/resolve/main/flux1-schnell-fp8.safetensors
+        size_gb: 17.24
+    min_vram_gb: 12
+    rec_vram_gb: 16
+    min_ram_gb: 32
+    cpu_ok: false
+    license: Apache-2.0
+    commercial_use: true
+    tasks:
+      text_to_image: flux_schnell_txt2img
+    params:
+      model: flux1-schnell-fp8.safetensors
+    defaults: {width: 1024, height: 1024, steps: 4, cfg: 1.0, sampler: euler, scheduler: simple}
+    resolution_family: flux
+    supports_negative_prompt: false
+    est_seconds: {mid: 40, high: 10}
+
+  - id: flux1-dev
+    name: FLUX.1 [dev] (fp8) – NICHT kommerziell
+    type: image
+    family: flux1
+    description: Hohe Qualität, aber FLUX.1-dev Non-Commercial License. Nur für private/Test-Zwecke.
+    files:
+      - name: flux1-dev-fp8.safetensors
+        folder: checkpoints
+        url: https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors
+        size_gb: 17.25
+    min_vram_gb: 12
+    rec_vram_gb: 16
+    min_ram_gb: 32
+    cpu_ok: false
+    license: FLUX.1 [dev] Non-Commercial License
+    commercial_use: false
+    tasks:
+      text_to_image: flux_schnell_txt2img
+    params:
+      model: flux1-dev-fp8.safetensors
+    defaults: {width: 1024, height: 1024, steps: 20, cfg: 1.0, sampler: euler, scheduler: simple}
+    resolution_family: flux
+    supports_negative_prompt: false
+    est_seconds: {mid: 120, high: 30}
+
+  # --------------------------------------------------------------- UPSCALE ---
+  - id: realesrgan-x4
+    name: Real-ESRGAN x4plus
+    type: upscale
+    family: esrgan
+    description: 4× KI-Upscaler (fotorealistisch). Wird nativ von ComfyUI geladen.
+    files:
+      - name: RealESRGAN_x4plus.safetensors
+        folder: upscale_models
+        url: https://huggingface.co/Comfy-Org/Real-ESRGAN_repackaged/resolve/main/RealESRGAN_x4plus.safetensors
+        size_gb: 0.067
+    min_vram_gb: 1
+    rec_vram_gb: 2
+    min_ram_gb: 4
+    cpu_ok: true
+    license: BSD-3-Clause
+    commercial_use: true
+    tasks:
+      upscale: esrgan_upscale
+    params:
+      upscale_model: RealESRGAN_x4plus.safetensors
+    native_scale: 4
+    est_seconds: {cpu: 90, low: 5, mid: 2, high: 1}
+
+  # ----------------------------------------------------------------- VIDEO ---
+  - id: wan21-t2v-1.3b
+    name: Wan 2.1 Text-to-Video 1.3B
+    type: video
+    family: wan21
+    description: Kleinstes Wan-Videomodell (480p, 16 fps). Läuft auf ~8 GB VRAM. Nur Text-to-Video.
+    files:
+      - name: wan2.1_t2v_1.3B_fp16.safetensors
+        folder: diffusion_models
+        url: https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_t2v_1.3B_fp16.safetensors
+        size_gb: 2.84
+      - name: umt5_xxl_fp8_e4m3fn_scaled.safetensors
+        folder: text_encoders
+        url: https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
+        size_gb: 6.74
+      - name: wan_2.1_vae.safetensors
+        folder: vae
+        url: https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors
+        size_gb: 0.25
+    min_vram_gb: 6
+    rec_vram_gb: 10
+    min_ram_gb: 16
+    cpu_ok: false
+    license: Apache-2.0
+    commercial_use: true
+    tasks:
+      text_to_video: wan21_t2v
+    params:
+      model: wan2.1_t2v_1.3B_fp16.safetensors
+      text_encoder: umt5_xxl_fp8_e4m3fn_scaled.safetensors
+      vae: wan_2.1_vae.safetensors
+    defaults: {width: 832, height: 480, frames: 49, fps: 16, steps: 30, cfg: 6.0, sampler: uni_pc, scheduler: simple, shift: 8.0}
+    max_frames: 81
+    frame_rule: 4n+1
+    resolution_family: wan480
+    est_seconds: {low: 900, mid: 300, high: 120}
+
+  - id: wan22-ti2v-5b
+    name: Wan 2.2 TI2V 5B (Text- & Image-to-Video, 720p)
+    type: video
+    family: wan22-5b
+    description: >-
+      Hybrides Modell für Text-to-Video und Image-to-Video in 1280×704 bei 24 fps.
+      Mit ComfyUI-Offloading ab ~8 GB VRAM nutzbar (langsam), komfortabel ab 16 GB.
+    files:
+      - name: wan2.2_ti2v_5B_fp16.safetensors
+        folder: diffusion_models
+        url: https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors
+        size_gb: 10.0
+      - name: umt5_xxl_fp8_e4m3fn_scaled.safetensors
+        folder: text_encoders
+        url: https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
+        size_gb: 6.74
+      - name: wan2.2_vae.safetensors
+        folder: vae
+        url: https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan2.2_vae.safetensors
+        size_gb: 1.41
+    min_vram_gb: 8
+    rec_vram_gb: 16
+    min_ram_gb: 32
+    cpu_ok: false
+    license: Apache-2.0
+    commercial_use: true
+    tasks:
+      text_to_video: wan22_5b_t2v
+      image_to_video: wan22_5b_i2v
+    params:
+      model: wan2.2_ti2v_5B_fp16.safetensors
+      text_encoder: umt5_xxl_fp8_e4m3fn_scaled.safetensors
+      vae: wan2.2_vae.safetensors
+    defaults: {width: 1280, height: 704, frames: 121, fps: 24, steps: 20, cfg: 5.0, sampler: uni_pc, scheduler: simple, shift: 8.0}
+    max_frames: 121
+    frame_rule: 4n+1
+    resolution_family: wan720
+    est_seconds: {mid: 900, high: 300}
+
+  - id: wan22-i2v-14b
+    name: Wan 2.2 Image-to-Video 14B (fp8 + Lightning 4-Step)
+    type: video
+    family: wan22-14b
+    description: >-
+      Beste lokale Image-to-Video-Qualität (MoE: High-/Low-Noise-Experten) mit
+      LightX2V-4-Step-LoRAs. High-End: ab 16 GB VRAM (24 GB empfohlen) und 64 GB RAM.
+    files:
+      - name: wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors
+        folder: diffusion_models
+        url: https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors
+        size_gb: 14.3
+      - name: wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors
+        folder: diffusion_models
+        url: https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors
+        size_gb: 14.3
+      - name: wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors
+        folder: loras
+        url: https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors
+        size_gb: 1.23
+      - name: wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors
+        folder: loras
+        url: https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors
+        size_gb: 1.23
+      - name: umt5_xxl_fp8_e4m3fn_scaled.safetensors
+        folder: text_encoders
+        url: https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
+        size_gb: 6.74
+      - name: wan_2.1_vae.safetensors
+        folder: vae
+        url: https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors
+        size_gb: 0.25
+    min_vram_gb: 16
+    rec_vram_gb: 24
+    min_ram_gb: 64
+    cpu_ok: false
+    license: Apache-2.0
+    commercial_use: true
+    tasks:
+      image_to_video: wan22_14b_i2v
+    params:
+      model_high: wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors
+      model_low: wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors
+      lora_high: wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors
+      lora_low: wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors
+      text_encoder: umt5_xxl_fp8_e4m3fn_scaled.safetensors
+      vae: wan_2.1_vae.safetensors
+    defaults: {width: 832, height: 480, frames: 81, fps: 16, steps: 4, cfg: 1.0, sampler: euler, scheduler: simple, shift: 5.0}
+    max_frames: 81
+    frame_rule: 4n+1
+    resolution_family: wan480
+    est_seconds: {high: 240}
+
+# Resolution presets per family (width x height). Wan sizes are multiples of 16/32.
+resolutions:
+  sd15:   {"1:1": [512, 512], "3:2": [768, 512], "2:3": [512, 768], "4:3": [680, 512], "3:4": [512, 680], "16:9": [912, 512], "9:16": [512, 912]}
+  sdxl:   {"1:1": [1024, 1024], "3:2": [1216, 832], "2:3": [832, 1216], "4:3": [1152, 896], "3:4": [896, 1152], "16:9": [1344, 768], "9:16": [768, 1344], "21:9": [1536, 640]}
+  flux:   {"1:1": [1024, 1024], "3:2": [1216, 832], "2:3": [832, 1216], "4:3": [1152, 864], "3:4": [864, 1152], "16:9": [1344, 768], "9:16": [768, 1344], "21:9": [1536, 640]}
+  wan480: {"16:9": [832, 480], "9:16": [480, 832], "1:1": [624, 624]}
+  wan720: {"16:9": [1280, 704], "9:16": [704, 1280], "1:1": [960, 960]}

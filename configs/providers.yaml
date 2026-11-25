@@ -1,0 +1,112 @@
+# Provider registry.
+#
+# Every provider declares: location (local|cloud), cost model, whether an API key
+# is required, whether it is enabled and which roles it implements. Roles map to
+# Python classes implementing the provider interfaces in backend/providers/base.py.
+#
+# Rules enforced by backend/providers/registry.py and backend/core/costs.py:
+#   * Cloud providers are disabled by default and can only run when
+#       - enabled explicitly (configs/providers.local.yaml),
+#       - the API key environment variable is set,
+#       - costs.monthly_budget > 0 and
+#       - every paid action is confirmed with a cost-confirmation token.
+#   * API keys are only read from environment variables named in `api_key_env`.
+#
+# Override any field in configs/providers.local.yaml (git-ignored).
+
+defaults:
+  image: comfyui
+  video: comfyui
+  image_tools: local-image-tools
+  processing: ffmpeg
+  motion: remotion
+  render3d: blender
+
+providers:
+  comfyui:
+    display_name: ComfyUI (lokal)
+    description: >-
+      Lokale Bild- und Videogenerierung über die ComfyUI-API (SD 1.5, SDXL, FLUX, Z-Image,
+      Wan 2.x). Modelle werden lokal ausgeführt – keine Kosten, offline-fähig.
+    location: local
+    cost_model: free
+    requires_api_key: false
+    enabled: true
+    models: auto            # discovered from the running ComfyUI instance
+    roles:
+      image: backend.providers.comfyui.image:ComfyUIImageProvider
+      video: backend.providers.comfyui.video:ComfyUIVideoProvider
+
+  local-image-tools:
+    display_name: Lokale Bildwerkzeuge
+    description: >-
+      CPU-Werkzeuge ohne KI-Modell: Lanczos-Upscaling, Zuschnitt/Formatwandlung,
+      Text-Overlays, Farbpaletten-Extraktion; Hintergrundentfernung via rembg (optional).
+    location: local
+    cost_model: free
+    requires_api_key: false
+    enabled: true
+    roles:
+      image: backend.providers.image_tools:LocalImageToolsProvider
+
+  ffmpeg:
+    display_name: FFmpeg
+    description: Videoschnitt, Konvertierung, Audio, Untertitel, Übergänge, Frame-Extraktion.
+    location: local
+    cost_model: free
+    requires_api_key: false
+    enabled: true
+    roles:
+      processing: backend.providers.ffmpeg:FFmpegProvider
+
+  blender:
+    display_name: Blender (headless)
+    description: 3D-Produktvisualisierungen, Kamerafahrten und 3D-Text über die Blender-Python-API.
+    location: local
+    cost_model: free
+    requires_api_key: false
+    enabled: true
+    roles:
+      render3d: backend.providers.blender:BlenderProvider
+
+  remotion:
+    display_name: Remotion
+    description: >-
+      Motion Graphics mit React (Intros, Lower Thirds, Social-Animationen).
+      Lizenzhinweis: kostenlos für Einzelpersonen und Firmen bis 3 Mitarbeitende,
+      größere Firmen benötigen eine Remotion-Firmenlizenz.
+    location: local
+    cost_model: free
+    requires_api_key: false
+    enabled: true
+    license_note: https://www.remotion.dev/license
+    roles:
+      motion: backend.providers.remotion:RemotionProvider
+
+  mock:
+    display_name: Mock (Testprovider, keine KI)
+    description: >-
+      Erzeugt deterministische synthetische Bilder/Videos ohne KI-Modell. Für Tests,
+      Demos und Workflow-Entwicklung ohne GPU. Wird nie automatisch ausgewählt.
+    location: local
+    cost_model: free
+    requires_api_key: false
+    enabled: true
+    explicit_only: true
+    roles:
+      image: backend.providers.mock:MockImageProvider
+      video: backend.providers.mock:MockVideoProvider
+
+# Example of an optional cloud provider (NOT shipped, disabled by design):
+#
+#   my-cloud:
+#     display_name: Beispiel-Cloud
+#     location: cloud
+#     cost_model: per_image
+#     unit_cost: 0.04
+#     currency: USD
+#     requires_api_key: true
+#     api_key_env: EXAMPLE_CLOUD_API_KEY
+#     enabled: false
+#     roles:
+#       image: my_package.providers:MyCloudImageProvider

@@ -1,0 +1,55 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# --- Node ---
+node_modules/
+apps/dashboard/dist/
+engines/remotion/out/
+*.tsbuildinfo
+
+# --- Secrets & local configuration (never commit) ---
+.env
+.env.*
+!.env.example
+configs/*.local.yaml
+configs/*.local.json
+.claude/settings.local.json
+
+# --- Runtime data (database, logs, caches, reports) ---
+data/
+
+# --- Engines installed by setup scripts ---
+engines/comfyui/ComfyUI/
+engines/blender/bin/
+
+# --- Generated media (keep folder structure, not content) ---
+assets/references/*
+assets/generated/*
+assets/images/*
+assets/videos/*
+assets/exports/*
+!assets/**/.gitkeep
+
+# --- Model weights (downloaded locally, never committed) ---
+*.safetensors
+*.ckpt
+*.pth
+*.gguf
+*.onnx
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

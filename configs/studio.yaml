@@ -1,0 +1,72 @@
+# AI Creative Studio – default configuration (committed).
+# Personal overrides belong in configs/studio.local.yaml (git-ignored) or in .env.
+# Secrets (API keys/tokens) are NEVER read from this file – use environment variables.
+
+server:
+  host: 127.0.0.1          # bind to localhost only; change deliberately for LAN access
+  port: 8420
+  cors_origins:
+    - http://127.0.0.1:5173
+    - http://localhost:5173
+  max_upload_mb: 200
+
+paths:
+  assets_dir: assets
+  data_dir: data
+  workflows_dir: workflows
+  comfy_templates_dir: engines/comfyui/workflows
+  comfyui_dir: engines/comfyui/ComfyUI
+  blender_scripts_dir: engines/blender/scripts
+  remotion_dir: engines/remotion
+  extra_allowed_dirs: []
+
+comfyui:
+  url: http://127.0.0.1:8188
+  request_timeout_s: 30
+  generation_timeout_s: 3600
+  poll_interval_s: 1.0
+  use_websocket: true
+
+ffmpeg:
+  ffmpeg_path: ffmpeg
+  ffprobe_path: ffprobe
+  timeout_s: 1800
+  default_crf: 20
+  preset: medium
+  video_codec: libx264
+  audio_codec: aac
+
+blender:
+  blender_path: blender
+  timeout_s: 3600
+
+remotion:
+  npx_path: npx
+  timeout_s: 1800
+
+jobs:
+  gpu_concurrency: 1        # one GPU job at a time avoids VRAM exhaustion
+  cpu_concurrency: 2
+  workflow_concurrency: 2
+  max_attempts: 2           # automatic retries for transient errors (e.g. ComfyUI restarting)
+  retry_backoff_s: 5
+  default_timeout_s: 7200
+
+hardware:
+  profile: auto             # auto | low | mid | high
+
+costs:
+  currency: USD
+  monthly_budget: 0.0       # 0 = no paid usage released at all
+  max_cost_per_job: 1.0
+  confirmation_ttl_s: 600
+
+quality:
+  auto_check: true
+  min_sharpness: 40.0
+  min_score: 60
+
+logging:
+  level: INFO
+  max_bytes: 5000000
+  backup_count: 5

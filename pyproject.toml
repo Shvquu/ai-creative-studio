@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-creative-studio"
+version = "0.1.0"
+description = "Local-first, open-source AI image & video production studio orchestrated by Claude Code"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "httpx>=0.27",
+  "pydantic>=2.7",
+  "pyyaml>=6.0",
+  "pillow>=10.1",
+  "numpy>=1.26",
+  "psutil>=5.9",
+  "websockets>=12",
+  "jinja2>=3.1",
+  "python-multipart>=0.0.9",
+  "mcp>=2.3,<3",
+]
+
+[project.optional-dependencies]
+# OpenCV improves video scene/frame analysis; numpy fallback is used otherwise.
+vision = ["opencv-python-headless>=4.9"]
+# Local background removal (downloads its own ONNX model on first use).
+rembg = ["rembg[cpu]>=2.0.50"]
+# Local speech-to-text for automatic subtitles.
+speech = ["faster-whisper>=1.0"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.5"]
+
+[project.scripts]
+acs = "backend.cli:main"
+acs-mcp = "mcp_server.server:main"
+
+[tool.setuptools.packages.find]
+include = ["backend*", "mcp_server*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "live_comfyui: requires a running ComfyUI instance (ACS_TEST_COMFYUI_URL)",
+  "live_models: requires real model weights installed in ComfyUI",
+  "blender: requires a Blender executable",
+  "remotion: requires Node.js and the Remotion project dependencies",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "B008"]

@@ -1,0 +1,63 @@
+# Hardware profiles. The active profile is chosen automatically by
+# backend/core/hardware.py:select_profile (override: hardware.profile in studio.yaml).
+#
+# Model lists are priority-ordered catalog ids (configs/models.yaml). The model
+# selector takes the first model that is installed AND fits the detected VRAM/RAM.
+
+profiles:
+  low:
+    label: Low-End
+    criteria: "CPU-only, NVIDIA/AMD < 8 GB VRAM, DirectML, Apple Silicon < 24 GB"
+    image:
+      models: [sd15-lcm, sd15, sdxl]
+      max_long_edge: 768
+      max_batch: 2
+    video:
+      # KI-Video nur mit GPU (≥ 6 GB). Ohne GPU: Ken-Burns/Slideshow-Fallback via FFmpeg.
+      models: [wan21-t2v-1.3b]
+      requires_gpu: true
+      max_frames: 33
+      fallback_workflow: videos/kenburns-slideshow
+    upscale: [realesrgan-x4]
+    comfyui_args: ["--lowvram"]
+    comfyui_args_cpu: ["--cpu"]
+    notes:
+      - "CPU-Modus: SD 1.5 + LCM (6 Schritte) erzeugt ein 512²-Bild in ca. 1 Minute."
+      - "Videos werden aus generierten Standbildern mit Kamerabewegung (Ken Burns) und Übergängen erstellt."
+      - "Für Upscaling Real-ESRGAN nutzen statt höherer Generierungsauflösung."
+
+  mid:
+    label: Mid-Range
+    criteria: "8–15 GB VRAM (z. B. RTX 3060 12 GB, 4060 Ti, 4070), Apple Silicon 24–63 GB"
+    image:
+      models: [flux2-klein-4b, sdxl, z-image-turbo, sd15-lcm, sd15]
+      max_long_edge: 1536
+      max_batch: 4
+    video:
+      models: [wan22-ti2v-5b, wan21-t2v-1.3b]
+      requires_gpu: true
+      max_frames: 81
+      fallback_workflow: videos/kenburns-slideshow
+    upscale: [realesrgan-x4]
+    comfyui_args: []
+    notes:
+      - "FLUX.2 Klein 4B / SDXL für Bilder in 1024²."
+      - "Wan 2.2 5B für 720p-Clips (Offloading, mehrere Minuten pro Clip) oder Wan 2.1 1.3B für 480p-Entwürfe."
+
+  high:
+    label: High-End
+    criteria: "≥ 16 GB VRAM und ≥ 32 GB RAM (z. B. RTX 4080/4090/5090), Apple Silicon ≥ 64 GB"
+    image:
+      models: [z-image-turbo, flux2-klein-4b, flux1-schnell, sdxl, sd15]
+      max_long_edge: 2048
+      max_batch: 8
+    video:
+      models: [wan22-i2v-14b, wan22-ti2v-5b, wan21-t2v-1.3b]
+      requires_gpu: true
+      max_frames: 121
+      fallback_workflow: videos/kenburns-slideshow
+    upscale: [realesrgan-x4]
+    comfyui_args: []
+    notes:
+      - "Wan 2.2 14B Image-to-Video mit Lightning-LoRAs (4 Schritte) für beste Qualität."
+      - "Z-Image Turbo für fotorealistische Bilder, FLUX.2 Klein für Typografie."
