@@ -1,0 +1,29 @@
+id: images/variations
+name: Bildvarianten
+description: Aus einem vorhandenen Bild mehrere Varianten mit steigender Veränderungsstärke erzeugen und als Übersicht anlegen.
+category: images
+tags: [varianten, bearbeitung]
+inputs:
+  source: {type: asset, required: true, label: Ausgangsbild}
+  prompt: {type: text, required: true, label: Gewünschte Änderung}
+  strengths: {type: list, default: [0.35, 0.55, 0.75], label: Stärken}
+  image_provider: {type: string}
+steps:
+  - id: variants
+    action: image.edit
+    foreach: "{{ inputs.strengths }}"
+    params:
+      provider: "{{ inputs.image_provider }}"
+      source: "{{ inputs.source }}"
+      prompt: "{{ inputs.prompt }}"
+      strength: "{{ item | float }}"
+  - id: sheet
+    label: Übersicht
+    action: image.contact_sheet
+    params:
+      sources: "{{ [inputs.source] + steps.variants.asset_ids }}"
+      columns: 4
+      labels: "{{ ['Original'] + inputs.strengths | map('string') | list }}"
+outputs:
+  variants: "{{ steps.variants.asset_ids }}"
+  overview: "{{ steps.sheet.asset_ids }}"

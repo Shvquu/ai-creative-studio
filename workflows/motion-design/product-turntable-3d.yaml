@@ -1,0 +1,42 @@
+id: motion-design/product-turntable-3d
+name: 3D-Produkt-Turntable
+description: Produkt (eigenes 3D-Modell oder Grundform) im Studio-Set mit 360°-Kamerafahrt rendern (Blender), optional als 9:16-Version.
+category: motion-design
+tags: [3d, blender, produkt]
+requires: [blender]
+inputs:
+  model: {type: asset, label: 3D-Modell (.glb/.obj/.fbx/.stl) – leer = Grundform}
+  product: {type: choice, default: bottle, options: [bottle, box, can, sphere, torus]}
+  color: {type: color, default: "#2563EB"}
+  material: {type: choice, default: glossy, options: [glossy, matte, metal, glass, plastic]}
+  background: {type: color, default: "#F3F4F6"}
+  seconds: {type: number, default: 4, min: 1, max: 20}
+  quality: {type: choice, default: draft, options: [draft, final]}
+  vertical_version: {type: boolean, default: false}
+steps:
+  - id: render
+    label: Blender-Rendering
+    action: render3d.render
+    params:
+      template: product_turntable
+      params:
+        model_path: "{{ inputs.model }}"
+        product: "{{ inputs.product }}"
+        color: "{{ inputs.color }}"
+        material: "{{ inputs.material }}"
+        background: "{{ inputs.background }}"
+      width: "{{ 960 if inputs.quality == 'draft' else 1920 }}"
+      height: "{{ 540 if inputs.quality == 'draft' else 1080 }}"
+      fps: 24
+      frames: "{{ (inputs.seconds * 24) | int }}"
+      samples: "{{ 16 if inputs.quality == 'draft' else 128 }}"
+  - id: vertical
+    action: process.resize
+    when: "{{ inputs.vertical_version }}"
+    params: {source: "{{ steps.render.asset.id }}", aspect_ratio: "9:16", mode: blur}
+  - id: qa
+    action: quality.analyze
+    params: {assets: "{{ steps.render.asset_ids }}", expected_fps: 24}
+outputs:
+  video: "{{ steps.render.asset.id }}"
+  vertical: "{{ steps.vertical.asset.id if steps.vertical.asset else None }}"

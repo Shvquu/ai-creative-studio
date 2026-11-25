@@ -1,0 +1,36 @@
+id: videos/text-to-video
+name: Text zu Video
+description: Kurzer KI-Clip (Wan 2.x) aus einer Beschreibung, optional mit Frame-Interpolation. Ohne GPU automatisch Ken-Burns-Fallback.
+category: videos
+tags: [video, wan]
+requires: [ai_video]
+fallback: videos/kenburns-slideshow
+inputs:
+  prompt: {type: text, required: true}
+  camera_move: {type: choice, default: dolly-in, options: [static, dolly-in, dolly-out, pan-left, pan-right, orbit, tilt-up, crane-up, tracking, handheld, zoom-in]}
+  aspect_ratio: {type: choice, default: "16:9", options: ["16:9", "9:16", "1:1"]}
+  duration_s: {type: number, default: 3, min: 1, max: 8}
+  model: {type: string}
+  interpolate_to_fps: {type: integer, default: 0, min: 0, max: 60, label: "Interpolieren auf FPS (0 = aus)"}
+  video_provider: {type: string}
+steps:
+  - id: clip
+    label: Video generieren
+    action: video.generate
+    params:
+      provider: "{{ inputs.video_provider }}"
+      prompt: "{{ inputs.prompt }}"
+      camera_move: "{{ inputs.camera_move }}"
+      aspect_ratio: "{{ inputs.aspect_ratio }}"
+      duration_s: "{{ inputs.duration_s }}"
+      model: "{{ inputs.model }}"
+  - id: smooth
+    label: Frame-Interpolation
+    action: process.interpolate
+    when: "{{ inputs.interpolate_to_fps > 0 }}"
+    params: {source: "{{ steps.clip.asset.id }}", target_fps: "{{ inputs.interpolate_to_fps }}", mode: motion}
+  - id: qa
+    action: quality.analyze
+    params: {assets: "{{ steps.smooth.asset_ids if inputs.interpolate_to_fps > 0 else steps.clip.asset_ids }}"}
+outputs:
+  video: "{{ steps.smooth.asset.id if inputs.interpolate_to_fps > 0 else steps.clip.asset.id }}"

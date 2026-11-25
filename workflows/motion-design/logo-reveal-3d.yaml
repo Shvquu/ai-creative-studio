@@ -1,0 +1,28 @@
+id: motion-design/logo-reveal-3d
+name: 3D-Logo-Reveal
+description: SVG-Logo als 3D-Objekt mit Kamerafahrt (Blender) – ideal als Intro-Bumper.
+category: motion-design
+tags: [logo, 3d, blender, intro]
+requires: [blender]
+inputs:
+  svg: {type: asset, required: true, label: Logo als SVG}
+  material: {type: choice, default: glossy, options: [glossy, matte, metal, plastic]}
+  color: {type: color, label: Einheitsfarbe (leer = SVG-Farben)}
+  background: {type: color, default: "#F3F4F6"}
+  seconds: {type: number, default: 3, min: 1, max: 10}
+  quality: {type: choice, default: draft, options: [draft, final]}
+steps:
+  - id: render
+    action: render3d.render
+    params:
+      template: logo_extrude
+      params: {svg_path: "{{ inputs.svg }}", material: "{{ inputs.material }}", color: "{{ inputs.color }}", background: "{{ inputs.background }}", degrees: 40}
+      width: "{{ 960 if inputs.quality == 'draft' else 1920 }}"
+      height: "{{ 540 if inputs.quality == 'draft' else 1080 }}"
+      frames: "{{ (inputs.seconds * 24) | int }}"
+      samples: "{{ 16 if inputs.quality == 'draft' else 128 }}"
+  - id: qa
+    action: quality.analyze
+    params: {assets: "{{ steps.render.asset_ids }}"}
+outputs:
+  video: "{{ steps.render.asset.id }}"

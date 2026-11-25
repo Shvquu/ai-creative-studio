@@ -1,0 +1,71 @@
+id: videos/storyboard-to-video
+name: Storyboard zu Video
+description: >-
+  Mehrszeniges Video: pro Szene Referenzbild → Image-to-Video → Schnitt mit Übergängen → Musik → Untertitel →
+  Qualitätsprüfung. Ohne GPU wird automatisch die Ken-Burns-Variante genutzt.
+category: videos
+tags: [video, storyboard, werbung]
+requires: [ai_video]
+fallback: videos/kenburns-slideshow
+inputs:
+  scenes:
+    type: list
+    required: true
+    description: 'Liste von Szenen: [{"prompt": "...", "duration_s": 3, "camera": "dolly-in", "caption": "..."}]'
+  style: {type: choice, default: cinematic, options: [cinematic, photorealistic, product, illustration, anime, 3d-render]}
+  aspect_ratio: {type: choice, default: "16:9", options: ["16:9", "9:16", "1:1"]}
+  transition: {type: choice, default: fade, options: [none, fade, dissolve, wipeleft, slideleft, fadeblack, circleopen, smoothleft]}
+  music: {type: asset, label: Musik (optional)}
+  subtitles: {type: boolean, default: true}
+  title: {type: string, label: Projekttitel}
+  image_provider: {type: string}
+  video_provider: {type: string}
+steps:
+  - id: references
+    label: Referenzbilder
+    action: image.generate
+    foreach: "{{ inputs.scenes }}"
+    as: scene
+    params:
+      provider: "{{ inputs.image_provider }}"
+      prompt: "{{ scene.prompt }}"
+      style: "{{ inputs.style }}"
+      aspect_ratio: "{{ inputs.aspect_ratio }}"
+      tags: [storyboard]
+  - id: clips
+    label: Szenen animieren
+    action: video.generate
+    foreach: "{{ inputs.scenes }}"
+    as: scene
+    params:
+      provider: "{{ inputs.video_provider }}"
+      prompt: "{{ scene.prompt }}"
+      image: "{{ steps.references.results[index].asset.id }}"
+      camera_move: "{{ scene.camera or 'dolly-in' }}"
+      aspect_ratio: "{{ inputs.aspect_ratio }}"
+      duration_s: "{{ scene.duration_s or 3 }}"
+  - id: timeline
+    action: timeline.from_assets
+    params:
+      assets: "{{ steps.clips.asset_ids }}"
+      captions: "{{ inputs.scenes | map(attribute='caption') | list }}"
+      transition: "{{ inputs.transition }}"
+  - id: edit
+    label: Schnitt, Musik, Untertitel
+    action: process.render
+    params:
+      clips: "{{ steps.timeline.clips }}"
+      width: "{{ 1920 if inputs.aspect_ratio == '16:9' else 1080 }}"
+      height: "{{ 1080 if inputs.aspect_ratio != '9:16' else 1920 }}"
+      fps: 24
+      transition: "{{ inputs.transition }}"
+      audio: "{{ {'source': inputs.music, 'fade_out_s': 1.5} if inputs.music else None }}"
+      subtitles: "{{ steps.timeline.subtitles if inputs.subtitles and steps.timeline.subtitles else None }}"
+      output_name: "{{ (inputs.title or 'storyboard') | slug }}"
+  - id: qa
+    action: quality.analyze
+    params: {assets: "{{ steps.edit.asset_ids }}", require_audio: "{{ inputs.music is not none and inputs.music != '' }}"}
+outputs:
+  video: "{{ steps.edit.asset.id }}"
+  clips: "{{ steps.clips.asset_ids }}"
+  references: "{{ steps.references.asset_ids }}"

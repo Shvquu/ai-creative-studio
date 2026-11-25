@@ -1,0 +1,26 @@
+id: social-media/multi-format-export
+name: Multi-Format-Export
+description: Ein Video gleichzeitig für YouTube (16:9), Reels/TikTok (9:16) und Feed (1:1/4:5) exportieren – mit unscharfem Hintergrund statt schwarzer Balken.
+category: social-media
+tags: [export, video, social]
+inputs:
+  video: {type: asset, required: true}
+  formats: {type: list, default: ["16:9", "9:16", "1:1"], label: "Formate"}
+  mode: {type: choice, default: blur, options: [blur, crop, pad]}
+  max_size_mb: {type: number, default: 0, label: "Max. Dateigröße pro Export (0 = egal)"}
+steps:
+  - id: formats
+    label: Formate rendern
+    action: process.resize
+    foreach: "{{ inputs.formats }}"
+    params: {source: "{{ inputs.video }}", aspect_ratio: "{{ item }}", mode: "{{ inputs.mode }}"}
+  - id: compress
+    action: process.compress
+    when: "{{ inputs.max_size_mb > 0 }}"
+    foreach: "{{ steps.formats.asset_ids }}"
+    params: {source: "{{ item }}", target_size_mb: "{{ inputs.max_size_mb }}"}
+  - id: qa
+    action: quality.analyze
+    params: {assets: "{{ steps.compress.asset_ids if inputs.max_size_mb > 0 else steps.formats.asset_ids }}"}
+outputs:
+  exports: "{{ steps.compress.asset_ids if inputs.max_size_mb > 0 else steps.formats.asset_ids }}"

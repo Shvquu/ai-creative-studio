@@ -1,0 +1,42 @@
+id: videos/image-to-video
+name: Bild zu Video
+description: Ein Standbild (vorhanden oder neu generiert) mit einem Videomodell animieren.
+category: videos
+tags: [video, animation, i2v]
+requires: [ai_video]
+fallback: videos/kenburns-slideshow
+inputs:
+  prompt: {type: text, required: true, label: Bewegung / Szene}
+  image: {type: asset, label: Startbild (leer = wird generiert)}
+  style: {type: choice, default: cinematic, options: [cinematic, photorealistic, product, illustration, anime, 3d-render]}
+  camera_move: {type: choice, default: dolly-in, options: [static, dolly-in, dolly-out, pan-left, pan-right, orbit, tilt-up, crane-up, tracking, zoom-in]}
+  aspect_ratio: {type: choice, default: "16:9", options: ["16:9", "9:16", "1:1"]}
+  duration_s: {type: number, default: 3, min: 1, max: 8}
+  image_provider: {type: string}
+  video_provider: {type: string}
+steps:
+  - id: reference
+    label: Referenzbild
+    action: image.generate
+    when: "{{ not inputs.image }}"
+    params:
+      provider: "{{ inputs.image_provider }}"
+      prompt: "{{ inputs.prompt }}"
+      style: "{{ inputs.style }}"
+      aspect_ratio: "{{ inputs.aspect_ratio }}"
+  - id: animate
+    label: Animieren
+    action: video.generate
+    params:
+      provider: "{{ inputs.video_provider }}"
+      prompt: "{{ inputs.prompt }}"
+      image: "{{ inputs.image or steps.reference.asset.id }}"
+      camera_move: "{{ inputs.camera_move }}"
+      aspect_ratio: "{{ inputs.aspect_ratio }}"
+      duration_s: "{{ inputs.duration_s }}"
+  - id: qa
+    action: quality.analyze
+    params: {assets: "{{ steps.animate.asset_ids }}"}
+outputs:
+  video: "{{ steps.animate.asset.id }}"
+  reference: "{{ inputs.image or steps.reference.asset.id }}"

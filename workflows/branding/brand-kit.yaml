@@ -1,0 +1,97 @@
+id: branding/brand-kit
+name: Brand Kit
+description: >-
+  Markenidentität in einem Durchlauf: Farbpalette, Typografie, Logo-Konzepte, Bildsprache,
+  Social-Media-Asset und Brand-Guidelines (HTML + Markdown).
+category: branding
+tags: [branding, logo, guidelines]
+inputs:
+  brand_name: {type: string, required: true}
+  industry: {type: string, required: true, label: Branche / Angebot}
+  tagline: {type: string}
+  audience: {type: text, label: Zielgruppe}
+  positioning: {type: text, label: Positionierung}
+  brand_values: {type: list, default: [], label: "Werte (Komma-getrennt)"}
+  voice: {type: list, default: [], label: "Tonalität (Komma-getrennt)"}
+  base_color: {type: color, default: "#2563EB", label: Primärfarbe}
+  harmony: {type: choice, default: analogous, options: [analogous, complementary, triadic, split, monochrome]}
+  logo_style: {type: choice, default: logo-flat, options: [logo-flat, logo-3d]}
+  logo_concepts: {type: integer, default: 4, min: 1, max: 8}
+  logo_symbol: {type: text, default: "a simple abstract symbol", label: Logo-Idee / Symbol}
+  imagery_prompt: {type: text, label: "Bildsprache (z. B. 'bright airy lifestyle photos of people using the product')"}
+  image_provider: {type: string}
+steps:
+  - id: palette
+    label: Farbpalette
+    action: image.palette
+    params: {base_color: "{{ inputs.base_color }}", harmony: "{{ inputs.harmony }}", count: 5, tags: [brand]}
+  - id: typography
+    label: Typografie
+    action: brand.typography
+    params: {keywords: "{{ inputs.brand_values + inputs.voice + [inputs.industry] }}"}
+  - id: logos
+    label: Logo-Konzepte
+    action: image.generate
+    params:
+      provider: "{{ inputs.image_provider }}"
+      prompt: "logo for '{{ inputs.brand_name }}', {{ inputs.industry }}, {{ inputs.logo_symbol }}, primary color {{ inputs.base_color }}"
+      style: "{{ inputs.logo_style }}"
+      aspect_ratio: "1:1"
+      batch_size: "{{ inputs.logo_concepts }}"
+      tags: [brand, logo]
+  - id: logo_sheet
+    label: Logo-Übersicht
+    action: image.contact_sheet
+    params:
+      sources: "{{ steps.logos.asset_ids }}"
+      columns: 4
+      labels: "{{ steps.logos.asset_ids | map('truncate', 12, True, '') | list }}"
+  - id: imagery
+    label: Bildsprache
+    action: image.generate
+    when: "{{ inputs.imagery_prompt }}"
+    params:
+      provider: "{{ inputs.image_provider }}"
+      prompt: "{{ inputs.imagery_prompt }}, color accents in {{ inputs.base_color }}"
+      style: photorealistic
+      aspect_ratio: "4:3"
+      batch_size: 2
+      tags: [brand, imagery]
+  - id: social
+    label: Social-Media-Post
+    action: image.resize
+    when: "{{ steps.imagery.asset_ids }}"
+    params: {source: "{{ steps.imagery.asset_ids[0] }}", format_preset: instagram_post, mode: crop}
+  - id: social_text
+    action: image.text_overlay
+    when: "{{ steps.social.asset_ids }}"
+    params:
+      source: "{{ steps.social.asset.id }}"
+      title: "{{ inputs.tagline or inputs.brand_name }}"
+      subtitle: "{{ inputs.brand_name if inputs.tagline else '' }}"
+      accent: "{{ inputs.base_color }}"
+      position: bottom
+  - id: guidelines
+    label: Brand Guidelines
+    action: brand.guidelines
+    params:
+      brand_name: "{{ inputs.brand_name }}"
+      tagline: "{{ inputs.tagline }}"
+      audience: "{{ inputs.audience }}"
+      positioning: "{{ inputs.positioning }}"
+      values: "{{ inputs.brand_values }}"
+      voice: "{{ inputs.voice }}"
+      palette: "{{ steps.palette.colors | map(attribute='hex') | list }}"
+      heading_font: "{{ steps.typography.heading_font }}"
+      body_font: "{{ steps.typography.body_font }}"
+      logos: "{{ steps.logos.asset_ids }}"
+      imagery: "{{ steps.imagery.asset_ids or [] }}"
+      imagery_style: "{{ inputs.imagery_prompt }}"
+      project: "{{ inputs.brand_name }}"
+outputs:
+  palette: "{{ steps.palette.colors | map(attribute='hex') | list }}"
+  typography: "{{ steps.typography.pairings }}"
+  logos: "{{ steps.logos.asset_ids }}"
+  logo_overview: "{{ steps.logo_sheet.asset.id }}"
+  social_post: "{{ steps.social_text.asset.id if steps.social_text.asset else None }}"
+  guidelines: "{{ steps.guidelines.asset_ids }}"

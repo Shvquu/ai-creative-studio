@@ -1,0 +1,38 @@
+id: motion-design/title-intro
+name: Titel-Intro / Outro
+description: Animiertes Intro (Remotion) mit Logo und Untertitel; ohne Node.js automatisch FFmpeg-Titelkarte.
+category: motion-design
+tags: [intro, outro, titel, motion]
+inputs:
+  title: {type: string, required: true}
+  subtitle: {type: string}
+  logo: {type: asset}
+  kind: {type: choice, default: TitleIntro, options: [TitleIntro, Outro]}
+  background: {type: color, default: "#0F172A"}
+  text_color: {type: color, default: "#F8FAFC"}
+  accent: {type: color, default: "#38BDF8"}
+  format: {type: choice, default: "16:9", options: ["16:9", "9:16", "1:1"]}
+  duration_s: {type: number, default: 4, min: 1, max: 20}
+steps:
+  - id: render
+    label: Rendern
+    action: motion.render
+    params:
+      composition: "{{ inputs.kind }}"
+      width: "{{ 1920 if inputs.format == '16:9' else 1080 }}"
+      height: "{{ 1080 if inputs.format != '9:16' else 1920 }}"
+      duration_s: "{{ inputs.duration_s }}"
+      props:
+        title: "{{ inputs.title if inputs.kind == 'TitleIntro' else '' }}"
+        headline: "{{ inputs.title if inputs.kind == 'Outro' else '' }}"
+        subtitle: "{{ inputs.subtitle if inputs.kind == 'TitleIntro' else '' }}"
+        cta: "{{ inputs.subtitle if inputs.kind == 'Outro' else '' }}"
+        logo: "{{ inputs.logo }}"
+        background: "{{ inputs.background }}"
+        textColor: "{{ inputs.text_color }}"
+        accent: "{{ inputs.accent }}"
+  - id: qa
+    action: quality.analyze
+    params: {assets: "{{ steps.render.asset_ids }}", expected_duration_s: "{{ inputs.duration_s }}"}
+outputs:
+  video: "{{ steps.render.asset.id }}"

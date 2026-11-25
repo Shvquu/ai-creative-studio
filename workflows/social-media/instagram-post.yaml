@@ -1,0 +1,55 @@
+id: social-media/instagram-post
+name: Instagram-Post (Bild + Clip)
+description: Quadratischer oder Hochformat-Post mit Text, optional zusätzlich als animierter Reel-Clip (Remotion).
+category: social-media
+tags: [instagram, social]
+inputs:
+  prompt: {type: text, label: Motiv (leer = vorhandenes Bild nutzen)}
+  image: {type: asset, label: Vorhandenes Bild}
+  headline: {type: string, required: true}
+  subline: {type: string}
+  cta: {type: string, default: "Mehr erfahren"}
+  brand_name: {type: string}
+  accent: {type: color, default: "#FACC15"}
+  format: {type: choice, default: instagram_post, options: [instagram_post, instagram_portrait, instagram_story]}
+  animated: {type: boolean, default: true, label: Zusätzlich als Reel-Clip}
+  image_provider: {type: string}
+steps:
+  - id: visual
+    action: image.generate
+    when: "{{ not inputs.image }}"
+    params:
+      provider: "{{ inputs.image_provider }}"
+      prompt: "{{ inputs.prompt or inputs.headline }}"
+      style: social-bold
+      aspect_ratio: "{{ '1:1' if inputs.format == 'instagram_post' else '9:16' if inputs.format == 'instagram_story' else '3:4' }}"
+  - id: sized
+    action: image.resize
+    params: {source: "{{ inputs.image or steps.visual.asset.id }}", format_preset: "{{ inputs.format }}", mode: crop}
+  - id: post
+    label: Text-Overlay
+    action: image.text_overlay
+    params: {source: "{{ steps.sized.asset.id }}", title: "{{ inputs.headline }}", subtitle: "{{ inputs.subline }}", accent: "{{ inputs.accent }}"}
+  - id: reel
+    label: Reel-Clip
+    action: motion.render
+    when: "{{ inputs.animated and caps.remotion }}"
+    continue_on_error: true
+    params:
+      composition: SocialPost
+      width: 1080
+      height: "{{ 1080 if inputs.format == 'instagram_post' else 1350 if inputs.format == 'instagram_portrait' else 1920 }}"
+      duration_s: 6
+      props:
+        image: "{{ steps.sized.asset.id }}"
+        headline: "{{ inputs.headline }}"
+        subline: "{{ inputs.subline }}"
+        cta: "{{ inputs.cta }}"
+        brandName: "{{ inputs.brand_name }}"
+        accent: "{{ inputs.accent }}"
+  - id: qa
+    action: quality.analyze
+    params: {assets: "{{ steps.post.asset_ids + (steps.reel.asset_ids or []) }}"}
+outputs:
+  post: "{{ steps.post.asset.id }}"
+  reel: "{{ steps.reel.asset.id if steps.reel.asset else None }}"
