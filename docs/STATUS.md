@@ -33,13 +33,13 @@ Legende: ✅ erfüllt · ⚠️ erfüllt mit Einschränkung · ❌ nicht umgeset
 | Bild | Text→Bild (Checkpoint, SD 1.5/LCM) | ✅ | ✅ | ✅ echtes Modell |
 | Bild | SDXL, FLUX.1, FLUX.2 Klein, Z-Image Turbo | ✅ | ✅ Template-Validierung | ⚠️ GPU nötig – Graphen von ComfyUI akzeptiert (nur „Modell fehlt“) |
 | Bild | Bild→Bild, Inpainting, Outpainting | ✅ | ✅ Templates + Provider | ⚠️ Graphen validiert, nicht mit echtem Modell ausgeführt |
-| Bild | ControlNet (SD 1.5 Canny/Scribble) | ✅ | ✅ | siehe Live-Tests |
+| Bild | ControlNet (SD 1.5 Canny/Scribble) | ✅ | ✅ | ✅ Canny mit echtem Modell (Scribble-Pfad = gleiche Graph-Logik ohne Canny-Node) |
 | Bild | LoRAs, Seeds, Batch, Stil-Presets | ✅ | ✅ | ✅ (LCM-LoRA) |
 | Bild | Upscaling Real-ESRGAN / Lanczos-Fallback | ✅ | ✅ | ✅ echtes Modell |
-| Bild | Freistellen (rembg, optional) | ✅ | ✅ | siehe Live-Tests |
+| Bild | Freistellen (rembg, optional) | ✅ | ✅ | ✅ (U²-Net, RGBA-Ausgabe) |
 | Bild | Text-Overlay, Formate, Palette, Kontaktbogen | ✅ | ✅ | ✅ |
 | Video | Text→Video / Bild→Video (Wan 2.1 1.3B, Wan 2.2 5B/14B) | ✅ | ✅ Template-Validierung | ⚠️ GPU nötig |
-| Video | KI-Video-Upscaling (ESRGAN pro Frame) + Fallback | ✅ | ✅ | siehe Live-Tests |
+| Video | KI-Video-Upscaling (ESRGAN pro Frame) + Fallback | ✅ | ✅ | ✅ echtes Modell, FPS + Audio erhalten; Lanczos-Fallback ✅ |
 | Video | Frame-Interpolation | ✅ FFmpeg `minterpolate` | ✅ | ✅ |
 | Video | Video→Video | ❌ | – | – (Interface vorhanden, liefert `capability_not_supported`) |
 | Video | Character Consistency | ⚠️ | – | nur über Referenzbild (I2V) + feste Seeds; kein Identitätsmodell |
@@ -59,6 +59,9 @@ Legende: ✅ erfüllt · ⚠️ erfüllt mit Einschränkung · ❌ nicht umgeset
 |---|---|
 | MCP → API → Queue → ComfyUI → SD 1.5 + LCM (CPU) | 512² in 52 s, QA-Score 100, Bild visuell geprüft |
 | Real-ESRGAN x4 Upscale (CPU) | 512² → 1024² in 31 s |
+| ControlNet Canny (SD 1.5 + LCM, CPU) | 384² mit Kreis-Steuerbild; Workflow-Sidecar enthält Canny/ControlNet-Nodes |
+| ESRGAN-Video-Upscale über ComfyUI (`LoadVideo` → `GetVideoComponents` → `CreateVideo`) | 96×64 → 192×128, 24 fps + Audio erhalten |
+| rembg-Freistellung | ✅ (Modell lädt beim ersten Aufruf) |
 | ComfyUI Smoke-Test (Bild + MP4 ohne Modell) | ✅ |
 | Abbruch eines laufenden ComfyUI-Jobs | ✅ (Queue-Löschung + Interrupt) |
 | Alle 16 Templates gegen `/object_info` (Nodes, Inputs, Enums) | ✅ |
