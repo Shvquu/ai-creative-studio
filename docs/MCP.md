@@ -69,7 +69,7 @@ Fett = Pflichtparameter.
 | `cancel_job` | Job abbrechen (wartend: sofort; laufend: ComfyUI-Interrupt bzw. Prozessabbruch). | **job_id** |
 | `retry_job` | Fehlgeschlagenen/abgebrochenen Job mit identischen Parametern neu starten. | **job_id** |
 | `list_jobs` | Job-Historie (neueste zuerst). | status, type, limit |
-| `generate_image` | Bild(er) mit lokalem KI-Modell generieren (ComfyUI). Ergebnis: Assets mit Pfad, Seed, Modell und Qualitätsscore. | **prompt**, negative_prompt, style, model, aspect_ratio, width, height, steps, cfg, seed, batch_size, loras, provider, project, tags, confirm_token, wait, timeout_s |
+| `generate_image` | Bild(er) mit lokalem KI-Modell generieren (ComfyUI). Ergebnis: Assets mit Pfad, Seed, Modell und Qualitätsscore. | **prompt**, negative_prompt, style, model, aspect_ratio, width, height, steps, cfg, seed, batch_size, loras, control_image, control_mode, control_strength, provider, project, tags, confirm_token, wait, timeout_s |
 | `edit_image` | Bild bearbeiten: img2img (Variation), inpaint (Maske weiß = neu; ohne Maske Alpha-Kanal) oder outpaint (Ränder erweitern). | **source**, prompt, mode, strength, mask, left, top, right, bottom, model, seed, provider, project, wait, timeout_s |
 | `upscale_image` | Hochskalieren mit Real-ESRGAN (falls installiert) oder Lanczos-Fallback. | **source**, scale, method, project, wait, timeout_s |
 | `remove_background` | Hintergrund entfernen (rembg, lokal; optionales Paket). Ergebnis: PNG mit Transparenz. alpha_matting = feinere Kanten (langsamer). | **source**, alpha_matting, model, project, wait, timeout_s |
@@ -78,6 +78,7 @@ Fett = Pflichtparameter.
 | `add_text_overlay` | Titel/Untertitel auf ein Bild setzen (Thumbnails, Social Posts) mit Kontrastfläche. | **source**, **title**, subtitle, position, color, accent, uppercase, font_scale, wait |
 | `extract_palette` | Farbpalette aus einem Bild extrahieren oder aus einer Basisfarbe ableiten (inkl. WCAG-Kontrastwerte). | source, base_color, harmony, count |
 | `generate_video` | KI-Video generieren (Wan 2.x via ComfyUI). Mit image = Image-to-Video. Ohne GPU: Fehler mit Fallback-Workflow. | **prompt**, image, model, aspect_ratio, duration_s, frames, fps, camera_move, negative_prompt, seed, provider, project, confirm_token, wait, timeout_s |
+| `upscale_video` | Video hochskalieren: Real-ESRGAN Frame für Frame (ComfyUI, Audio/FPS bleiben) oder FFmpeg-Lanczos-Fallback. | **source**, scale, method, project, wait, timeout_s |
 | `get_video_info` | Medieninfo per ffprobe: Auflösung, Dauer, FPS, Codecs, Bitrate, Audio. | **path** |
 | `convert_video` | Format/Codec konvertieren (MP4/H.264, WebM/VP9, GIF mit Palette, Audio-Extraktion). | **source**, format, crf, fps, width, height, remove_audio, wait, timeout_s |
 | `trim_video` | Video schneiden (Start/Ende oder Dauer). | **source**, start_s, end_s, duration_s, wait |

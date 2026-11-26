@@ -139,3 +139,76 @@ async def test_real_generation_sd15_lcm_and_esrgan(studio: Any) -> None:
     if "RealESRGAN_x4plus.safetensors" in installed.get("upscale_models", set()):
         up = await _run(studio, "image.upscale", {"source": a["id"], "scale": 2}, timeout=900)
         assert up["model"] == "realesrgan-x4" and up["assets"][0]["width"] == 768
+
+
+def _point_to_live_comfy(studio: Any) -> Any:
+    studio.settings.comfyui.url = COMFY_URL
+    prov = studio.registry.get("image", "comfyui")
+    prov.client.base_url = COMFY_URL.rstrip("/")
+    prov.client._http = None
+    return prov
+
+
+@pytest.mark.live_models
+@pytest.mark.skipif(not COMFY_UP, reason="set ACS_TEST_COMFYUI_URL to a running ComfyUI")
+async def test_real_controlnet_canny(studio: Any) -> None:
+    prov = _point_to_live_comfy(studio)
+    installed = await prov.installed()
+    if "control_v11p_sd15_canny_fp16.safetensors" not in installed.get("controlnet", set()) or \
+            "lcm-lora-sdv1-5.safetensors" not in installed.get("loras", set()):
+        pytest.skip("needs controlnet-canny-sd15 + sd15-lcm")
+    from PIL import Image, ImageDraw
+
+    ctrl = studio.settings.assets_dir / "references" / "shape.png"
+    ctrl.parent.mkdir(parents=True, exist_ok=True)
+    img = Image.new("RGB", (384, 384), "white")
+    ImageDraw.Draw(img).ellipse([60, 60, 324, 324], outline="black", width=8)
+    img.save(ctrl)
+    r = await _run(studio, "image.generate", {"prompt": "a glossy orange planet in space", "seed": 3, "width": 384,
+                                              "height": 384, "control_image": "references/shape.png"}, timeout=900)
+    a = r["assets"][0]
+    assert r["model"] == "sd15-lcm" and a["width"] == 384
+    wf = studio.assets.read_sidecar(studio.assets.get(a["id"]))["workflow"]
+    classes = {n["class_type"] for n in wf.values()}
+    assert {"ControlNetApplyAdvanced", "Canny", "ControlNetLoader"} <= classes
+
+
+@pytest.mark.live_models
+@pytest.mark.skipif(not (COMFY_UP and HAS_FFMPEG), reason="set ACS_TEST_COMFYUI_URL to a running ComfyUI")
+async def test_real_video_upscale_esrgan(studio: Any) -> None:
+    from tests.conftest import write_test_video
+
+    prov = _point_to_live_comfy(studio)
+    if "RealESRGAN_x4plus.safetensors" not in (await prov.installed()).get("upscale_models", set()):
+        pytest.skip("needs realesrgan-x4")
+    vid = write_test_video(studio.settings.assets_dir / "references" / "tiny.mp4", 0.5, size="96x64")
+    r = await _run(studio, "video.upscale", {"source": str(vid), "scale": 2, "method": "model"}, timeout=900)
+    out = r["assets"][0]
+    assert r["model"] == "realesrgan-x4" and (out["width"], out["height"]) == (192, 128)
+    info = await studio.ffmpeg.get_info(studio.resolve_input(out["id"]))
+    assert info.has_audio and abs((info.fps or 0) - 24) < 0.5  # fps + audio preserved
+
+
+@pytest.mark.skipif(not HAS_FFMPEG, reason="ffmpeg missing")
+async def test_video_upscale_lanczos_fallback(studio: Any) -> None:
+    from tests.conftest import write_test_video
+
+    vid = write_test_video(studio.settings.assets_dir / "references" / "small.mp4", 0.5, size="96x64")
+    r = await _run(studio, "video.upscale", {"source": str(vid), "scale": 2})  # ComfyUI unreachable → fallback
+    assert r["fallback"] == "lanczos" and r["assets"][0]["width"] == 192
+
+
+async def test_remove_background_rembg(studio: Any) -> None:
+    import importlib.util
+
+    if importlib.util.find_spec("rembg") is None:
+        pytest.skip("rembg not installed (pip install -e '.[rembg]')")
+    src = write_test_image(studio.settings.assets_dir / "references" / "obj.png", (320, 240))
+    try:
+        r = await _run(studio, "image.remove_background", {"source": str(src)}, timeout=600)
+    except AssertionError as exc:  # model download (u2net, ~176 MB) may be blocked offline
+        pytest.skip(f"rembg model unavailable: {exc}")
+    from PIL import Image
+
+    with Image.open(studio.resolve_input(r["asset_ids"][0])) as im:
+        assert im.mode == "RGBA"

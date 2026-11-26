@@ -60,6 +60,20 @@ run_workflow("images/text-to-image", {"prompt": "...", "style": "photorealistic"
 REST: `POST /api/images/generate` (Body = Parameter) → 202 + Job; `GET /api/jobs/{id}/wait?timeout=120`.
 CLI: `python -m backend.cli run-workflow images/text-to-image --inputs '{"prompt":"...","variants":2}'`.
 
+### Komposition per ControlNet (SD 1.5)
+
+Wenn Form/Komposition vorgegeben ist (Produktumriss, Logo-Silhouette, Skizze), ein Steuerbild mitgeben:
+
+```
+generate_image(prompt="a glossy orange planet in space", control_image="references/form.png",
+               control_mode="canny", control_strength=0.8)       # Foto → Kanten
+generate_image(prompt="cozy cottage, watercolor", control_image="references/skizze.png",
+               control_mode="none")                               # Skizze/Scribble direkt
+```
+
+Benötigt `controlnet-canny-sd15` bzw. `controlnet-scribble-sd15` (je 0,72 GB, OpenRAIL) und ein SD-1.5-Modell;
+ohne `model` wählt das Studio automatisch die beste installierte SD-1.5-Variante (z. B. `sd15-lcm`).
+
 ## Qualitätsanforderungen
 - QA bestanden: Score ≥ 60 und kein „error“-Befund; Schärfe (Laplace-Varianz) ≥ 40 bei Fotos.
 - Keine leeren/einfarbigen Bilder, Belichtung Ø 35–225, ausgefressene Lichter ≤ 8 %.

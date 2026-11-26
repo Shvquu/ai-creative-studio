@@ -43,8 +43,8 @@ sind zwei Clients derselben API (eine Wahrheit für Jobs, Assets und Kosten).
 | # | Bereich | Modul | Verantwortung |
 |---|---|---|---|
 | 1 | AI Orchestration | `backend/orchestration`, `.claude/` | Modellauswahl nach Hardware, Prompt-Technik, Job-Handler, Agents & Skills |
-| 2 | Image Generation | `backend/providers/comfyui/image.py` | Text→Bild, Bild→Bild, Inpaint, Outpaint, Upscale via ComfyUI-Templates |
-| 3 | Video Generation | `backend/providers/comfyui/video.py` | Text→Video, Bild→Video (Wan 2.1/2.2) |
+| 2 | Image Generation | `backend/providers/comfyui/image.py` | Text→Bild, Bild→Bild, Inpaint, Outpaint, ControlNet, Upscale via ComfyUI-Templates |
+| 3 | Video Generation | `backend/providers/comfyui/video.py` | Text→Video, Bild→Video (Wan 2.1/2.2), KI-Video-Upscaling (ESRGAN pro Frame) |
 | 4 | Image Processing | `backend/providers/image_tools.py` | Lanczos-Upscale, Resize/Crop, Text-Overlay, Paletten, rembg |
 | 5 | Video Processing | `backend/providers/ffmpeg.py` | Info, Convert, Trim, Merge+Transitions, Audio, Untertitel, Frames, Interpolation, Aspect |
 | 6 | Motion Design | `backend/providers/remotion.py`, `engines/remotion` | React-basierte Motion Graphics |
@@ -92,6 +92,9 @@ Workflows liegen als **API-Format-Templates** in `engines/comfyui/workflows/*.js
 `meta`-Block, der Parameter auf `[node_id, input]`-Ziele abbildet. Templates werden in Tests
 strukturell geprüft und mit `scripts/maintenance/validate_comfy_templates.py` gegen
 `/object_info` einer echten ComfyUI-Instanz validiert (Node-Klassen, Input-Namen, Enum-Werte).
+
+Bekannte Eigenheit (live gefunden und behandelt): ComfyUI sendet `execution_success` über den WebSocket, *bevor*
+der History-Eintrag geschrieben ist; der Client wartet daher nach Ende-Signal kurz auf `/history/{id}`.
 
 ## 4. Job-System
 

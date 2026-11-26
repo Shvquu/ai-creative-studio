@@ -29,8 +29,6 @@ dependencies = [
 vision = ["opencv-python-headless>=4.9"]
 # Local background removal (downloads its own ONNX model on first use).
 rembg = ["rembg[cpu]>=2.0.50"]
-# Local speech-to-text for automatic subtitles.
-speech = ["faster-whisper>=1.0"]
 dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.5"]
 
 [project.scripts]

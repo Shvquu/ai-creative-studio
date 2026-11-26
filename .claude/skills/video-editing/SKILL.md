@@ -56,6 +56,12 @@ REST: `POST /api/process/{render|merge|trim|add_audio|add_subtitles|resize|conve
 slidedown, circleopen, circleclose, radial, smoothleft, smoothright, fadeblack, fadewhite, zoomin, pixelize, hblur.
 Ken Burns: `zoom` in/out/none, `pan` none/left/right/up/down, `strength` 0–0,6.
 
+### Video hochskalieren
+
+`upscale_video(source, scale=2)` – Real-ESRGAN Frame für Frame über ComfyUI (FPS und Audio bleiben erhalten),
+automatischer Fallback auf FFmpeg-Lanczos, wenn kein Upscale-Modell/ComfyUI verfügbar ist (`fallback: "lanczos"`
+im Ergebnis). Auf CPU nur für kurze, kleine Clips sinnvoll.
+
 ## Qualitätsanforderungen
 - Dauer = Summe der Clips − Übergänge (± 5 %); fps konstant; Audio vorhanden, wenn Musik gewünscht.
 - Lautheit −16 LUFS (bei `normalize`), Musik endet mit Fade, keine Klicks an Schnitten.

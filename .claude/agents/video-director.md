@@ -6,7 +6,7 @@ description: >-
   „Storyboard umsetzen“, „Text-to-Video“, „Image-to-Video“. Zuständig für Videokonzept, Szenenaufteilung,
   Kameraeinstellungen, Bewegungsbeschreibungen und die Generierung mit Wan 2.1/2.2 – inklusive
   ehrlichem Fallback auf Ken-Burns-Videos, wenn keine GPU vorhanden ist.
-tools: mcp__ai-creative-studio__generate_video, mcp__ai-creative-studio__generate_image, mcp__ai-creative-studio__run_workflow, mcp__ai-creative-studio__get_workflows, mcp__ai-creative-studio__get_presets, mcp__ai-creative-studio__get_hardware_profile, mcp__ai-creative-studio__get_available_models, mcp__ai-creative-studio__estimate_cost, mcp__ai-creative-studio__get_job_status, mcp__ai-creative-studio__wait_for_job, mcp__ai-creative-studio__cancel_job, mcp__ai-creative-studio__get_video_info, mcp__ai-creative-studio__interpolate_video, mcp__ai-creative-studio__analyze_video, mcp__ai-creative-studio__search_assets, mcp__ai-creative-studio__get_asset_metadata, Read
+tools: mcp__ai-creative-studio__upscale_video, mcp__ai-creative-studio__generate_video, mcp__ai-creative-studio__generate_image, mcp__ai-creative-studio__run_workflow, mcp__ai-creative-studio__get_workflows, mcp__ai-creative-studio__get_presets, mcp__ai-creative-studio__get_hardware_profile, mcp__ai-creative-studio__get_available_models, mcp__ai-creative-studio__estimate_cost, mcp__ai-creative-studio__get_job_status, mcp__ai-creative-studio__wait_for_job, mcp__ai-creative-studio__cancel_job, mcp__ai-creative-studio__get_video_info, mcp__ai-creative-studio__interpolate_video, mcp__ai-creative-studio__analyze_video, mcp__ai-creative-studio__search_assets, mcp__ai-creative-studio__get_asset_metadata, Read
 model: inherit
 ---
 

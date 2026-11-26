@@ -17,13 +17,13 @@ Claude Code ──MCP──▶ mcp_server ──HTTP──▶ Backend (FastAPI) 
 
 | Bereich | Umfang |
 |---|---|
-| Bilder | Text→Bild, Bild→Bild, Inpainting, Outpainting, Real-ESRGAN-Upscaling, Freistellen (rembg), Varianten, LoRAs, Stil-Presets, Seeds |
-| Videos | Text→Video & Bild→Video (Wan 2.1 1.3B, Wan 2.2 5B/14B), Storyboards, Frame-Interpolation; **CPU-Fallback** mit Ken-Burns-Kamerafahrten |
+| Bilder | Text→Bild, Bild→Bild, Inpainting, Outpainting, ControlNet (Canny/Scribble), Real-ESRGAN-Upscaling, Freistellen (rembg), Varianten, LoRAs, Stil-Presets, Seeds |
+| Videos | Text→Video & Bild→Video (Wan 2.1 1.3B, Wan 2.2 5B/14B), Storyboards, KI-Video-Upscaling, Frame-Interpolation; **CPU-Fallback** mit Ken-Burns-Kamerafahrten |
 | Schnitt | Timeline-Rendering, 20 Übergänge (xfade), Musik mit Lautheitsnormalisierung, Untertitel (eingebrannt/Spur), Formatwandlung 16:9 ↔ 9:16 ↔ 1:1, Kompression |
 | Motion & 3D | Remotion-Intros, Bauchbinden, Social-Clips, kinetische Typo; Blender-Produkt-Turntables, 3D-Text, 3D-Logos aus SVG |
 | Branding | Farbpaletten mit WCAG-Kontrast, Schriftpaarungen (freie Fonts), Logo-Konzepte, Brand Guidelines (HTML + Markdown) |
 | Qualität | Schärfe, Belichtung, Rauschen, Leerbild, Seitenverhältnis, Plattform-Presets, schwarze/eingefrorene Frames, Flackern, Berichte |
-| Infrastruktur | Hardware-Erkennung & Profile, Async-Job-Queue (Retry/Abbruch/Fortschritt), Asset-Bibliothek mit reproduzierbaren Metadaten, Kostenkontrolle, 50 MCP-Tools, Dashboard |
+| Infrastruktur | Hardware-Erkennung & Profile, Async-Job-Queue (Retry/Abbruch/Fortschritt), Asset-Bibliothek mit reproduzierbaren Metadaten, Kostenkontrolle, 51 MCP-Tools, Dashboard |
 
 ## Schnellstart
 

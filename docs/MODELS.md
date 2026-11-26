@@ -26,7 +26,9 @@ setzen (nur Umgebungsvariable).
 | `z-image-turbo` | Z-Image Turbo | image | 20.7 GB | 12 / 16 GB | 32 GB | nein | Apache-2.0 | ja | text_to_image |
 | `flux1-schnell` | FLUX.1 [schnell] (fp8, all-in-one) | image | 17.24 GB | 12 / 16 GB | 32 GB | nein | Apache-2.0 | ja | text_to_image |
 | `flux1-dev` | FLUX.1 [dev] (fp8) – NICHT kommerziell | image | 17.25 GB | 12 / 16 GB | 32 GB | nein | FLUX.1 [dev] Non-Commercial License | **nein** | text_to_image |
-| `realesrgan-x4` | Real-ESRGAN x4plus | upscale | 0.07 GB | 1 / 2 GB | 4 GB | ja | BSD-3-Clause | ja | upscale |
+| `realesrgan-x4` | Real-ESRGAN x4plus | upscale | 0.07 GB | 1 / 2 GB | 4 GB | ja | BSD-3-Clause | ja | upscale, video_upscale |
+| `controlnet-canny-sd15` | ControlNet 1.1 Canny (SD 1.5) | controlnet | 0.72 GB | 3 / 6 GB | 8 GB | ja | OpenRAIL (ControlNet 1.1, lllyasviel) | mit Auflagen | ControlNet-Zusatz für SD 1.5 |
+| `controlnet-scribble-sd15` | ControlNet 1.1 Scribble (SD 1.5) | controlnet | 0.72 GB | 3 / 6 GB | 8 GB | ja | OpenRAIL (ControlNet 1.1, lllyasviel) | mit Auflagen | ControlNet-Zusatz für SD 1.5 |
 | `wan21-t2v-1.3b` | Wan 2.1 Text-to-Video 1.3B | video | 9.83 GB | 6 / 10 GB | 16 GB | nein | Apache-2.0 | ja | text_to_video |
 | `wan22-ti2v-5b` | Wan 2.2 TI2V 5B (Text- & Image-to-Video, 720p) | video | 18.15 GB | 8 / 16 GB | 32 GB | nein | Apache-2.0 | ja | text_to_video, image_to_video |
 | `wan22-i2v-14b` | Wan 2.2 Image-to-Video 14B (fp8 + Lightning 4-Step) | video | 38.05 GB | 16 / 24 GB | 64 GB | nein | Apache-2.0 | ja | image_to_video |
@@ -39,7 +41,7 @@ setzen (nur Umgebungsvariable).
 | Lizenz | Modelle | Kommerzielle Nutzung |
 |---|---|---|
 | Apache-2.0 | FLUX.1 schnell, FLUX.2 Klein 4B, Z-Image Turbo, Wan 2.1/2.2 | erlaubt |
-| CreativeML OpenRAIL-M / ++-M | SD 1.5, SDXL, LCM-LoRA | erlaubt, aber mit **Nutzungsbeschränkungen** (keine verbotenen Anwendungsfälle laut Lizenz) |
+| CreativeML OpenRAIL-M / ++-M, OpenRAIL | SD 1.5, SDXL, LCM-LoRA, ControlNet 1.1 | erlaubt, aber mit **Nutzungsbeschränkungen** (keine verbotenen Anwendungsfälle laut Lizenz) |
 | FLUX.1 [dev] Non-Commercial | FLUX.1 dev | **nicht erlaubt** – nur privat/Test |
 | BSD-3-Clause | Real-ESRGAN x4plus | erlaubt |
 
@@ -58,7 +60,6 @@ FLUX.2 Klein **9B** ist nicht im Katalog, da nicht kommerziell lizenziert.
   `python -m backend.cli validate-templates` und `pytest tests/unit/test_core.py::test_catalog_consistency` ausführen.
 
 ## Download-Quellen (generiert)
-
 
 **sd15-lcm**
 - `checkpoints/v1-5-pruned-emaonly-fp16.safetensors` (2.13 GB) – https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive/resolve/main/v1-5-pruned-emaonly-fp16.safetensors
@@ -89,6 +90,12 @@ FLUX.2 Klein **9B** ist nicht im Katalog, da nicht kommerziell lizenziert.
 **realesrgan-x4**
 - `upscale_models/RealESRGAN_x4plus.safetensors` (0.067 GB) – https://huggingface.co/Comfy-Org/Real-ESRGAN_repackaged/resolve/main/RealESRGAN_x4plus.safetensors
 
+**controlnet-canny-sd15**
+- `controlnet/control_v11p_sd15_canny_fp16.safetensors` (0.723 GB) – https://huggingface.co/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11p_sd15_canny_fp16.safetensors
+
+**controlnet-scribble-sd15**
+- `controlnet/control_v11p_sd15_scribble_fp16.safetensors` (0.723 GB) – https://huggingface.co/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11p_sd15_scribble_fp16.safetensors
+
 **wan21-t2v-1.3b**
 - `diffusion_models/wan2.1_t2v_1.3B_fp16.safetensors` (2.84 GB) – https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_t2v_1.3B_fp16.safetensors
 - `text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors` (6.74 GB) – https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
@@ -106,3 +113,4 @@ FLUX.2 Klein **9B** ist nicht im Katalog, da nicht kommerziell lizenziert.
 - `loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors` (1.23 GB) – https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors
 - `text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors` (6.74 GB) – https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
 - `vae/wan_2.1_vae.safetensors` (0.25 GB) – https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors
+
