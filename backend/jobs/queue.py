@@ -21,7 +21,13 @@ from pathlib import Path
 from typing import Any
 
 from backend.core.db import Database, to_json, utcnow
-from backend.core.errors import JobCancelledError, NotFoundError, StudioError, StudioTimeoutError, ValidationError
+from backend.core.errors import (
+    JobCancelledError,
+    NotFoundError,
+    StudioError,
+    StudioTimeoutError,
+    ValidationError,
+)
 
 from .context import JobContext
 from .models import Job, JobStatus

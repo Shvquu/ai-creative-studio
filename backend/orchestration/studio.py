@@ -24,6 +24,7 @@ from backend.core.costs import CostEstimate, CostGuard, ResourceEstimate
 from backend.core.db import Database
 from backend.core.errors import (
     HardwareInsufficientError,
+    ModelNotInstalledError,
     StudioError,
     ValidationError,
 )
@@ -41,9 +42,15 @@ from backend.providers.base import (
     RemoveBackgroundRequest,
     UpscaleRequest,
     VideoGenerateRequest,
+    VideoUpscaleRequest,
 )
 from backend.providers.blender import Render3DRequest
-from backend.providers.image_tools import ContactSheetRequest, PaletteRequest, ResizeImageRequest, TextOverlayRequest
+from backend.providers.image_tools import (
+    ContactSheetRequest,
+    PaletteRequest,
+    ResizeImageRequest,
+    TextOverlayRequest,
+)
 from backend.providers.registry import ProviderRegistry
 from backend.providers.remotion import MotionRenderRequest
 from backend.quality import QualityAnalyzer, validate_resolution
@@ -71,6 +78,7 @@ JOB_TYPES: dict[str, tuple[str | None, str]] = {
     "image.contact_sheet": ("image_tools", "cpu"),
     "video.generate": ("video", "gpu"),
     "video.image_to_video": ("video", "gpu"),
+    "video.upscale": ("video", "gpu"),
     "motion.render": ("motion", "cpu"),
     "render3d.render": ("render3d", "gpu"),
     "quality.analyze": (None, "cpu"),
@@ -97,7 +105,7 @@ for _op in PROCESS_OPS:
 
 # Fields in request params that reference files (resolved through PathGuard / asset ids).
 _FILE_FIELDS = {"source", "video", "audio", "image", "mask", "background_image", "model_path", "svg_path", "font_path",
-                "logo"}
+                "logo", "control_image"}
 _FILE_LIST_FIELDS = {"sources", "logos", "imagery", "assets"}
 
 
@@ -310,6 +318,8 @@ class Studio:
                 OutpaintRequest(**clean)
             elif job_type == "image.upscale":
                 UpscaleRequest(**clean)
+            elif job_type == "video.upscale":
+                VideoUpscaleRequest(**clean)
             elif job_type in ("video.generate", "video.image_to_video"):
                 VideoGenerateRequest(**{k: v for k, v in clean.items() if k != "camera_move"})
             elif job_type.startswith("process."):
@@ -342,6 +352,7 @@ class Studio:
             "image.contact_sheet": self.op_image_contact_sheet,
             "video.generate": self.op_video_generate,
             "video.image_to_video": self.op_video_generate,
+            "video.upscale": self.op_video_upscale,
             "motion.render": self.op_motion_render,
             "render3d.render": self.op_render3d,
             "quality.analyze": self.op_quality_analyze,
@@ -438,8 +449,10 @@ class Studio:
     # ------------------------------------------------------------ image ops
     async def op_image_generate(self, params: dict[str, Any], ctx: JobContext) -> dict[str, Any]:
         self._out_ctx(ctx, params)
-        p = {k: v for k, v in params.items() if k not in ("provider", "confirm_token", "_cost_estimate")}
+        p = self._resolve_params({k: v for k, v in params.items() if k not in ("provider", "confirm_token", "_cost_estimate")})
         provider, _ = self._image_provider(params)
+        if p.get("control_image") and not p.get("model") and hasattr(provider, "installed"):
+            p["model"] = await self._controlnet_base_model(provider)
         p["model"] = await self._auto_model("text_to_image", provider, p)
         cm = self.catalog.find(p["model"]) if p.get("model") else None
         built = build_prompt(p["prompt"], style=p.get("style"), family=cm.family if cm else None,
@@ -454,6 +467,15 @@ class Studio:
         result = await provider.generate(req, ctx)
         return await self._register(result, ctx, params, prompt=req.prompt, negative=req.negative_prompt,
                                     extra_tags=[t for t in ("generated", p.get("style")) if t])
+
+    async def _controlnet_base_model(self, provider: Any) -> str:
+        """ControlNet templates target SD 1.5 – pick the best installed SD 1.5 variant."""
+        report, decision = self.hardware()
+        installed = await provider.installed()
+        for cand in self.selector.candidates("text_to_image", decision, report.ram_total_gb, installed):
+            if cand.model.family == "sd15" and cand.installed and cand.fits:
+                return cand.model.id
+        raise ModelNotInstalledError("ControlNet benötigt ein SD-1.5-Modell: python scripts/models/download_models.py --model sd15-lcm")
 
     async def _edit_like(self, task: str, method: str, model_cls: type, params: dict[str, Any], ctx: JobContext) -> dict[str, Any]:
         self._out_ctx(ctx, params)
@@ -547,6 +569,28 @@ class Studio:
         return await self._register(result, ctx, params, prompt=req.prompt, negative=req.negative_prompt,
                                     extra_tags=["generated", "video", task],
                                     qa_expect={"expected_fps": result.parameters.get("fps")})
+
+    async def op_video_upscale(self, params: dict[str, Any], ctx: JobContext) -> dict[str, Any]:
+        """AI upscale (Real-ESRGAN per frame via ComfyUI) with FFmpeg-Lanczos fallback."""
+        self._out_ctx(ctx, params)
+        p = self._resolve_params({k: v for k, v in params.items() if k not in ("provider", "confirm_token", "_cost_estimate")})
+        req = VideoUpscaleRequest(**p)
+        if req.method in ("auto", "model"):
+            try:
+                provider = self.registry.get("video", params.get("provider"))
+                result = await provider.upscale(req, ctx)
+                return await self._register(result, ctx, params, extra_tags=["upscaled", "video"])
+            except StudioError as exc:
+                if req.method == "model":
+                    raise
+                log.info("AI video upscale unavailable (%s) – FFmpeg Lanczos fallback", exc.message)
+        info = await self.ffmpeg.get_info(Path(req.source))
+        w = ffm.even((info.width or 640) * req.scale)
+        h = ffm.even((info.height or 360) * req.scale)
+        result = await self.ffmpeg.convert(ffm.ConvertRequest(source=req.source, format="mp4", width=w, height=h), ctx)
+        out = await self._register(result, ctx, params, extra_tags=["upscaled", "video", "lanczos"])
+        out["fallback"] = "lanczos"
+        return out
 
     def _make_process_op(self, op: str) -> Op:
         model_cls, method = PROCESS_OPS[op]

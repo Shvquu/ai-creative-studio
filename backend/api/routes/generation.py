@@ -45,7 +45,7 @@ async def job_types() -> dict[str, Any]:
 
 _IMAGE_OPS = {"generate", "edit", "inpaint", "outpaint", "upscale", "remove_background", "resize", "text_overlay",
               "palette", "contact_sheet"}
-_VIDEO_OPS = {"generate", "image_to_video"}
+_VIDEO_OPS = {"generate", "image_to_video", "upscale"}
 
 
 @router.post("/images/{op}", status_code=202)

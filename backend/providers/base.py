@@ -130,6 +130,10 @@ class ImageGenerateRequest(_Common):
     batch_size: int = Field(1, ge=1, le=8)
     loras: list[LoraSpec] = Field(default_factory=list, max_length=8)
     style: str | None = Field(None, max_length=64)
+    control_image: str | None = Field(None, description="ControlNet: Steuerbild (Foto für Canny-Kanten oder Skizze)")
+    control_mode: Literal["canny", "none"] = Field("canny", description="canny = Kanten aus Foto, none = Bild direkt (Scribble)")
+    control_strength: float = Field(0.8, ge=0, le=2)
+    controlnet: str | None = Field(None, description="ControlNet-Katalog-ID oder Datei; leer = passend zu control_mode")
 
 
 class ImageEditRequest(_Common):
@@ -192,6 +196,8 @@ class VideoGenerateRequest(_Common):
 class VideoUpscaleRequest(_Common):
     source: str
     scale: float = Field(2.0, ge=1.0, le=4.0)
+    model: str | None = Field(None, description="Upscale-Modell (Katalog-ID), leer = bestes installiertes")
+    method: Literal["auto", "model", "lanczos"] = "auto"
 
 
 # ----------------------------------------------------------------------------

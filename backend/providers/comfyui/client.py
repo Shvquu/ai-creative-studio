@@ -222,7 +222,9 @@ class ComfyUIClient:
                 await asyncio.wait_for(self._track_ws(ws, prompt_id, total_nodes, ctx), timeout=timeout)
             else:
                 await asyncio.wait_for(self._track_poll(prompt_id, ctx), timeout=timeout)
-            history = await self._history(prompt_id)
+            # ComfyUI emits `execution_success` *before* the history entry is written
+            # (PromptQueue.task_done runs afterwards) → wait briefly for it.
+            history = await self._await_history(prompt_id)
             if history is None:
                 raise GenerationError("ComfyUI hat kein Ergebnis geliefert")
             status = history.get("status") or {}
@@ -241,6 +243,16 @@ class ComfyUIClient:
                     await ws.close()
                 except Exception:
                     pass
+
+    async def _await_history(self, prompt_id: str, timeout: float = 30.0) -> dict[str, Any] | None:
+        deadline = time.monotonic() + timeout
+        while True:
+            history = await self._history(prompt_id)
+            if history is not None and (history.get("status") or {}).get("status_str") in ("success", "error"):
+                return history
+            if time.monotonic() > deadline:
+                return history
+            await asyncio.sleep(min(0.25, self.poll_interval))
 
     async def _history(self, prompt_id: str) -> dict[str, Any] | None:
         data = await self.get_json(f"/history/{prompt_id}")

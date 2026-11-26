@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError as PydanticValidationError
 
 from backend.core.catalog import Catalog, frames_4n1
 from backend.core.config import deep_merge, env_overrides, load_settings, parse_dotenv, save_local_overrides
@@ -50,7 +51,7 @@ def test_save_local_overrides_validates(tmp_path: Path) -> None:
     (tmp_path / "configs").mkdir()
     save_local_overrides(tmp_path, {"hardware": {"profile": "high"}})
     assert load_settings(tmp_path, environ={}).hardware.profile == "high"
-    with pytest.raises(Exception):
+    with pytest.raises(PydanticValidationError):
         save_local_overrides(tmp_path, {"hardware": {"profile": "ultra"}})
 
 
@@ -143,7 +144,7 @@ def test_catalog_consistency() -> None:
         for f in m.files:
             assert f.url.startswith("https://huggingface.co/"), f.url
             assert f.size_gb > 0
-        for task, tpl_id in m.tasks.items():
+        for tpl_id in m.tasks.values():
             tpl = templates.get(tpl_id)
             unknown = set(m.params) - set(tpl.meta.parameters)
             assert not unknown, f"{m.id}: params {unknown} not in template {tpl_id}"

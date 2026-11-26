@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import pytest
+from jinja2.exceptions import SecurityError
 
 from backend.core.catalog import Catalog
 from backend.core.errors import HardwareInsufficientError, ModelNotInstalledError, ValidationError
@@ -194,9 +194,6 @@ def test_workflow_templating(studio: Any) -> None:
     assert eng.render_value("{{ inputs.a }}", ctx) == [1, 2]
     assert eng.render_value("Hallo {{ inputs.name }}, {{ inputs.a | length }}", ctx) == "Hallo X, 2"
     assert eng.render_value({"k": ["{{ inputs.missing }}"]}, ctx) == {"k": [None]}
-    with pytest.raises(Exception):  # sandbox: no access to python internals
+    with pytest.raises(SecurityError):  # sandbox: no access to python internals
         eng.render_value("{{ inputs.__class__.__mro__ }}", ctx)
 
-
-def _unused(path: Path) -> None:  # pragma: no cover - keep imports explicit
-    _ = path

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import shutil
+import uuid
+from pathlib import Path
 from typing import Any
 
 from backend.core.catalog import frames_4n1
@@ -13,6 +16,7 @@ from backend.providers.base import (
     ProviderHealth,
     VideoGenerateRequest,
     VideoProvider,
+    VideoUpscaleRequest,
 )
 
 from .common import ComfyBase, random_seed
@@ -28,13 +32,13 @@ class ComfyUIVideoProvider(ComfyBase, VideoProvider):
         self._init_comfy()
 
     def get_capabilities(self) -> set[Capability]:
-        return {Capability.TEXT_TO_VIDEO, Capability.IMAGE_TO_VIDEO}
+        return {Capability.TEXT_TO_VIDEO, Capability.IMAGE_TO_VIDEO, Capability.VIDEO_UPSCALE}
 
     async def health(self) -> ProviderHealth:
         return await self.comfy_health()
 
     async def get_models(self) -> list[ModelInfo]:
-        return await self.models_info(("video",))
+        return await self.models_info(("video", "upscale"))
 
     async def close(self) -> None:
         await self.client.close()
@@ -99,6 +103,27 @@ class ComfyUIVideoProvider(ComfyBase, VideoProvider):
             workflow=workflow,
             metadata={"license": cm.license if cm else None, "commercial_use": cm.commercial_use if cm else None},
         )
+
+    async def upscale(self, req: VideoUpscaleRequest, ctx: JobContext) -> GenerationResult:
+        cm, template_id, params = await self.resolve_model(req.model, "video_upscale")
+        template = self.templates.get(template_id)
+        native = (cm.native_scale if cm else None) or 4
+        await ctx.progress(0.01, "Video wird hochgeladen")
+        # LoadVideo lists files in the input root → upload without subfolder, unique name
+        src = Path(req.source)
+        staged = ctx.output_dir / ".tmp" / f"{uuid.uuid4().hex[:8]}_{src.name}"
+        staged.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, staged)
+        try:
+            name = await self.client.upload_image(staged, subfolder="")
+        finally:
+            staged.unlink(missing_ok=True)
+        values = {**params, "video": name, "rescale": round(req.scale / native, 4)}
+        workflow = self.build(template, values, [])
+        files = await self.execute(template, workflow, ctx)
+        return GenerationResult(files=files, provider=self.name, model=cm.id if cm else None,
+                                parameters={"scale": req.scale, "native_scale": native, "template": template.id},
+                                workflow=workflow)
 
     async def smoke_test(self, ctx: JobContext) -> list:
         template = self.templates.get("smoke_test_video")

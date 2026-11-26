@@ -380,6 +380,10 @@ async def generate_image(
     batch_size: Annotated[int, Field(default=1, ge=1, le=8)] = 1,
     loras: Annotated[list[dict[str, Any]] | None, Field(default=None, max_length=8, description=(
         "Zusätzliche LoRAs [{name: Datei in models/loras, strength: 0.0–2.0}] – nur für Checkpoint-Modelle (SD 1.5/SDXL/FLUX.1)"))] = None,
+    control_image: Annotated[AssetRef | None, Field(default=None, description=(
+        "ControlNet (SD 1.5): Steuerbild – Foto (Kanten werden per Canny übernommen) oder Skizze mit control_mode='none'"))] = None,
+    control_mode: Literal["canny", "none"] = "canny",
+    control_strength: Annotated[float, Field(default=0.8, ge=0, le=2)] = 0.8,
     provider: Annotated[str | None, Field(default=None, description="leer = Standard (comfyui); 'mock' = Testmodus ohne KI")] = None,
     project: Project = None,
     tags: Annotated[list[str] | None, Field(default=None, max_length=20)] = None,
@@ -391,7 +395,10 @@ async def generate_image(
     return await _submit("/images/generate", {
         "prompt": prompt, "negative_prompt": negative_prompt, "style": style, "model": model, "aspect_ratio": aspect_ratio,
         "width": width, "height": height, "steps": steps, "cfg": cfg, "seed": seed, "batch_size": batch_size,
-        "loras": loras, "provider": provider, "project": project, "tags": tags, "confirm_token": confirm_token}, wait, timeout_s)
+        "loras": loras, "provider": provider,
+        "control_image": check_ref(control_image) if control_image else None,
+        "control_mode": control_mode if control_image else None,
+        "control_strength": control_strength if control_image else None, "project": project, "tags": tags, "confirm_token": confirm_token}, wait, timeout_s)
 
 
 @mcp.tool()
@@ -516,6 +523,15 @@ async def generate_video(
               "negative_prompt": negative_prompt, "seed": seed, "provider": provider, "project": project,
               "confirm_token": confirm_token}
     return await _submit("/videos/generate", params, wait, timeout_s)
+
+
+@mcp.tool()
+async def upscale_video(source: AssetRef, scale: Annotated[float, Field(default=2.0, ge=1.0, le=4.0)] = 2.0,
+                        method: Literal["auto", "model", "lanczos"] = "auto", project: Project = None,
+                        wait: Wait = True, timeout_s: Timeout = 1800) -> dict[str, Any]:
+    """Video hochskalieren: Real-ESRGAN Frame für Frame (ComfyUI, Audio/FPS bleiben) oder FFmpeg-Lanczos-Fallback."""
+    return await _submit("/videos/upscale", {"source": check_ref(source), "scale": scale, "method": method,
+                                             "project": project}, wait, timeout_s)
 
 
 # ---- FFmpeg ------------------------------------------------------------------------

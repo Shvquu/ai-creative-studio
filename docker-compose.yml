@@ -1,0 +1,42 @@
+# Optional container setup. The native setup (./setup.sh / .\setup.ps1) is the primary path.
+#
+#   docker compose up -d studio                      # backend + dashboard, uses ComfyUI on the host
+#   docker compose --profile gpu up -d               # + ComfyUI with NVIDIA GPU (needs NVIDIA Container Toolkit)
+#
+# Models live on the host in ./engines/comfyui/models (download with scripts/models/download_models.py
+# --models-dir engines/comfyui/models). Nothing is downloaded automatically.
+services:
+  studio:
+    build: .
+    image: ai-creative-studio:local
+    ports:
+      - "127.0.0.1:8420:8420"          # localhost only
+    environment:
+      ACS__COMFYUI__URL: ${ACS__COMFYUI__URL:-http://host.docker.internal:8188}
+      ACS_API_TOKEN: ${ACS_API_TOKEN:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./assets:/app/assets
+      - ./data:/app/data
+      - ./configs:/app/configs
+    restart: unless-stopped
+
+  comfyui:
+    profiles: ["gpu"]
+    build: ./engines/comfyui/docker
+    image: ai-creative-studio-comfyui:local
+    ports:
+      - "127.0.0.1:8188:8188"
+    volumes:
+      - ./engines/comfyui/models:/comfyui/models
+      - ./data/comfyui-output:/comfyui/output
+      - ./data/comfyui-input:/comfyui/input
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped

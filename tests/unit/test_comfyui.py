@@ -9,7 +9,12 @@ from typing import Any
 import httpx
 import pytest
 
-from backend.core.errors import GenerationError, ModelNotInstalledError, ProviderUnavailableError, ValidationError
+from backend.core.errors import (
+    GenerationError,
+    ModelNotInstalledError,
+    ProviderUnavailableError,
+    ValidationError,
+)
 from backend.jobs.context import JobContext
 from backend.providers.comfyui.client import ComfyUIClient
 from backend.providers.comfyui.templates import TemplateLibrary, insert_loras, render

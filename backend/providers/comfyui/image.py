@@ -25,6 +25,19 @@ from backend.providers.base import (
 from .common import ComfyBase, random_seed
 
 
+def bypass_canny(workflow: dict[str, Any]) -> dict[str, Any]:
+    """control_mode=none: feed the control image straight into ControlNet (scribbles, line art, depth maps)."""
+    canny_ids = [k for k, v in workflow.items() if v["class_type"] == "Canny"]
+    for cid in canny_ids:
+        source = workflow[cid]["inputs"]["image"]
+        for node in workflow.values():
+            for key, value in node["inputs"].items():
+                if value == [cid, 0]:
+                    node["inputs"][key] = source
+        del workflow[cid]
+    return workflow
+
+
 def _snap(value: int, multiple: int = 8) -> int:
     return max(multiple, int(round(value / multiple)) * multiple)
 
@@ -68,9 +81,36 @@ class ComfyUIImageProvider(ComfyBase, ImageProvider):
         }
 
     # ------------------------------------------------------------- operations
+    async def _resolve_controlnet(self, req: ImageGenerateRequest, base_family: str | None) -> str:
+        """Pick the ControlNet file for the request (catalog id, file name or by control_mode)."""
+        if base_family not in (None, "sd15"):
+            raise CapabilityNotSupportedError(
+                f"ControlNet ist für SD-1.5-Modelle eingerichtet (gewählt: Familie '{base_family}'). model='sd15' oder 'sd15-lcm' wählen."
+            )
+        installed = (await self.installed()).get("controlnet", set())
+        if req.controlnet:
+            cm = self.catalog.find(req.controlnet) if req.controlnet in self.catalog.models else None
+            name = cm.files[0].name if cm else req.controlnet
+        else:
+            wanted = "controlnet-canny-sd15" if req.control_mode == "canny" else "controlnet-scribble-sd15"
+            name = self.catalog.get(wanted).files[0].name
+        if name not in installed:
+            from backend.core.errors import ModelNotInstalledError
+
+            mid = next((m.id for m in self.catalog.models.values() if any(f.name == name for f in m.files)), name)
+            raise ModelNotInstalledError(
+                f"ControlNet '{name}' fehlt. Installieren: python scripts/models/download_models.py --model {mid}",
+                details={"missing_files": [name]},
+            )
+        return name
+
     async def generate(self, req: ImageGenerateRequest, ctx: JobContext) -> GenerationResult:
         await ctx.progress(0.0, "Modell wird ausgewählt")
         cm, template_id, params = await self.resolve_model(req.model, "text_to_image")
+        control_name = None
+        if req.control_image:
+            control_name = await self._resolve_controlnet(req, cm.family if cm else None)
+            template_id = "checkpoint_controlnet_txt2img"
         template = self.templates.get(req.template or template_id)
         defaults = cm.defaults if cm else {}
         width, height = self._dims(req, cm)
@@ -86,13 +126,20 @@ class ComfyUIImageProvider(ComfyBase, ImageProvider):
             "seed": seed,
             **self._sampling_values(req, defaults),
         }
+        if control_name:
+            await ctx.progress(0.01, "Steuerbild wird hochgeladen")
+            values.update({"control_image": await self.upload(req.control_image), "controlnet": control_name,
+                           "control_strength": req.control_strength})
         loras = [*(cm.extra_loras if cm else []), *[lora.model_dump() for lora in req.loras]]
         workflow = self.build(template, values, loras)
+        if control_name and req.control_mode == "none":
+            bypass_canny(workflow)
         files = await self.execute(template, workflow, ctx)
         return GenerationResult(
             files=files, provider=self.name, model=cm.id if cm else req.model, seed=seed,
-            parameters={k: v for k, v in values.items() if k not in ("prompt", "negative_prompt")} | {
-                "template": template.id, "loras": loras},
+            parameters={k: v for k, v in values.items() if k not in ("prompt", "negative_prompt", "control_image")} | {
+                "template": template.id, "loras": loras} | ({"control_mode": req.control_mode, "control_source": str(req.control_image)}
+                                                           if control_name else {}),
             workflow=workflow,
             metadata={"license": cm.license if cm else None, "commercial_use": cm.commercial_use if cm else None},
         )

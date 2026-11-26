@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "id": "esrgan_video_upscale",
+    "name": "Real-ESRGAN Video-Upscale",
+    "task": "video_upscale",
+    "kind": "video",
+    "description": "Video Frame für Frame mit einem Upscale-Modell vergrößern (Audio und FPS bleiben erhalten).",
+    "parameters": {
+      "video": {
+        "targets": [
+          [
+            "1",
+            "file"
+          ]
+        ],
+        "required": true
+      },
+      "upscale_model": {
+        "targets": [
+          [
+            "3",
+            "model_name"
+          ]
+        ],
+        "default": "RealESRGAN_x4plus.safetensors"
+      },
+      "rescale": {
+        "targets": [
+          [
+            "5",
+            "scale_by"
+          ]
+        ],
+        "default": 0.5
+      },
+      "filename_prefix": {
+        "targets": [
+          [
+            "7",
+            "filename_prefix"
+          ]
+        ],
+        "default": "acs/video_upscaled"
+      }
+    },
+    "uploads": [
+      "video"
+    ],
+    "outputs": [
+      "7"
+    ]
+  },
+  "workflow": {
+    "1": {
+      "class_type": "LoadVideo",
+      "inputs": {
+        "file": "example.mp4"
+      }
+    },
+    "2": {
+      "class_type": "GetVideoComponents",
+      "inputs": {
+        "video": [
+          "1",
+          0
+        ]
+      }
+    },
+    "3": {
+      "class_type": "UpscaleModelLoader",
+      "inputs": {
+        "model_name": "RealESRGAN_x4plus.safetensors"
+      }
+    },
+    "4": {
+      "class_type": "ImageUpscaleWithModel",
+      "inputs": {
+        "upscale_model": [
+          "3",
+          0
+        ],
+        "image": [
+          "2",
+          0
+        ]
+      }
+    },
+    "5": {
+      "class_type": "ImageScaleBy",
+      "inputs": {
+        "image": [
+          "4",
+          0
+        ],
+        "upscale_method": "lanczos",
+        "scale_by": 0.5
+      }
+    },
+    "6": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "images": [
+          "5",
+          0
+        ],
+        "fps": [
+          "2",
+          2
+        ],
+        "audio": [
+          "2",
+          1
+        ]
+      }
+    },
+    "7": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "video": [
+          "6",
+          0
+        ],
+        "filename_prefix": "acs/video_upscaled",
+        "format": "mp4",
+        "format.codec": "h264"
+      }
+    }
+  }
+}

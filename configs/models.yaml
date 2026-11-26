@@ -254,10 +254,54 @@ models:
     commercial_use: true
     tasks:
       upscale: esrgan_upscale
+      video_upscale: esrgan_video_upscale
     params:
       upscale_model: RealESRGAN_x4plus.safetensors
     native_scale: 4
     est_seconds: {cpu: 90, low: 5, mid: 2, high: 1}
+
+  # ------------------------------------------------------------ CONTROLNET ---
+  - id: controlnet-canny-sd15
+    name: ControlNet 1.1 Canny (SD 1.5)
+    type: controlnet
+    family: sd15
+    description: Übernimmt Kanten/Komposition eines Fotos (z. B. Produktform, Logo-Umriss) in die SD-1.5-Generierung.
+    files:
+      - name: control_v11p_sd15_canny_fp16.safetensors
+        folder: controlnet
+        url: https://huggingface.co/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11p_sd15_canny_fp16.safetensors
+        size_gb: 0.723
+    min_vram_gb: 3
+    rec_vram_gb: 6
+    min_ram_gb: 8
+    cpu_ok: true
+    license: OpenRAIL (ControlNet 1.1, lllyasviel)
+    commercial_use: restricted
+    params:
+      controlnet: control_v11p_sd15_canny_fp16.safetensors
+    defaults: {mode: canny}
+    est_seconds: {cpu: 90, low: 6, mid: 3, high: 1}
+
+  - id: controlnet-scribble-sd15
+    name: ControlNet 1.1 Scribble (SD 1.5)
+    type: controlnet
+    family: sd15
+    description: Macht aus einer einfachen Skizze (weiße Linien auf Schwarz oder umgekehrt) ein ausgearbeitetes Bild.
+    files:
+      - name: control_v11p_sd15_scribble_fp16.safetensors
+        folder: controlnet
+        url: https://huggingface.co/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11p_sd15_scribble_fp16.safetensors
+        size_gb: 0.723
+    min_vram_gb: 3
+    rec_vram_gb: 6
+    min_ram_gb: 8
+    cpu_ok: true
+    license: OpenRAIL (ControlNet 1.1, lllyasviel)
+    commercial_use: restricted
+    params:
+      controlnet: control_v11p_sd15_scribble_fp16.safetensors
+    defaults: {mode: none}
+    est_seconds: {cpu: 90, low: 6, mid: 3, high: 1}
 
   # ----------------------------------------------------------------- VIDEO ---
   - id: wan21-t2v-1.3b

@@ -23,7 +23,7 @@ class ModelFile(BaseModel):
 class CatalogModel(BaseModel):
     id: str
     name: str
-    type: Literal["image", "video", "upscale"]
+    type: Literal["image", "video", "upscale", "controlnet"]
     family: str
     description: str = ""
     files: list[ModelFile]
