@@ -22,6 +22,11 @@ Logs: `data/logs/studio.log` (Backend), `data/logs/mcp.log` (MCP-Server), `data/
 
 ## Häufige Probleme
 
+**Windows: `check-system.ps1`/`setup.ps1` meldet „Die schließende "}" fehlt“ oder `â€“` in der Ausgabe**
+Ältere Versionen der Skripte enthielten UTF-8-Sonderzeichen; Windows PowerShell 5.1 liest Skripte ohne BOM als ANSI
+und interpretiert Teile davon als Anführungszeichen. Behoben (Skripte sind jetzt reines ASCII) – `git pull` ausführen.
+Ein Test (`tests/unit/test_scripts.py`) verhindert Rückfälle.
+
 **ComfyUI startet nicht / „Torch not compiled with CUDA enabled“**
 PyTorch passt nicht zur GPU. Im ComfyUI-venv neu installieren:
 `engines/comfyui/ComfyUI/.venv/bin/python -m pip install --force-reinstall torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130`

@@ -51,7 +51,7 @@ Legende: ✅ erfüllt · ⚠️ erfüllt mit Einschränkung · ❌ nicht umgeset
 | Infrastruktur | Job-Queue: Retry, Abbruch, Timeout, Recovery, SSE | ✅ | ✅ | ✅ (inkl. ComfyUI-Abbruch) |
 | Infrastruktur | Docker | ✅ | – | ⚠️ Studio-Image gebaut und gestartet (nur mit Proxy-CA dieser Sandbox); GPU-ComfyUI-Image nicht gebaut |
 | Setup | `setup.sh`, `start.sh`, `check-system.sh` | ✅ | – | ✅ in frischem Klon (inkl. ComfyUI + PyTorch CPU) |
-| Setup | `setup.ps1`, `start.ps1`, `check-system.ps1` | ✅ | – | ⚠️ nur mit PowerShell 7 geparst, **nicht unter Windows ausgeführt** |
+| Setup | `setup.ps1`, `start.ps1`, `check-system.ps1` | ✅ | ✅ Parser-Test mit simulierter PS-5.1-Dekodierung | ⚠️ erster Lauf unter Windows schlug fehl (Encoding, behoben); weiterhin nicht vollständig unter Windows ausgeführt |
 
 ## Live-Tests in dieser Umgebung (echte Engines)
 

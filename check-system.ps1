@@ -1,10 +1,15 @@
 <#
 .SYNOPSIS
-  AI Creative Studio – Systemprüfung für Windows. Funktioniert vor und nach dem Setup.
+  AI Creative Studio - Systempruefung fuer Windows. Funktioniert vor und nach dem Setup.
 #>
 $ErrorActionPreference = "Continue"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
+# Windows PowerShell 5.1 reads scripts as ANSI and Python uses the console code page when piped:
+# keep this file ASCII-only and force UTF-8 for Python output.
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 function Row($k, $v) { Write-Host ("  {0,-14} {1}" -f $k, $v) }
 function Have($cmd) { return [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
 
@@ -21,7 +26,7 @@ if (Have "nvidia-smi") {
   $cuda = (nvidia-smi | Select-String -Pattern "CUDA Version: ([0-9.]+)").Matches | Select-Object -First 1
   if ($cuda) { Row "CUDA" $cuda.Groups[1].Value }
 } else {
-  Get-CimInstance Win32_VideoController | ForEach-Object { Row "GPU" "$($_.Name) (kein CUDA – AMD/Intel nur via DirectML, langsamer)" }
+  Get-CimInstance Win32_VideoController | ForEach-Object { Row "GPU" "$($_.Name) (kein CUDA - AMD/Intel nur via DirectML, langsamer)" }
 }
 
 Write-Host "`n== Werkzeuge =="
@@ -41,5 +46,5 @@ if (Test-Path $VPy) {
   & $VPy -m backend.cli check
   Write-Host "`nReport gespeichert: data\reports\hardware-report.md"
 } else {
-  Write-Host "`nNoch nicht eingerichtet -> .\setup.ps1 ausführen."
+  Write-Host "`nNoch nicht eingerichtet -> .\setup.ps1 ausfuehren."
 }

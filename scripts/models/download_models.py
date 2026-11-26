@@ -99,6 +99,9 @@ def confirm(question: str) -> bool:
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):  # Windows code pages cannot encode the status symbols
+        if (getattr(stream, "encoding", "") or "").lower().replace("-", "") != "utf8" and hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
     settings = load_settings()
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--list", action="store_true", help="Katalog mit Hardware-Eignung anzeigen")

@@ -13,6 +13,17 @@ from typing import Any
 from backend.core.config import get_settings
 
 
+def _safe_console() -> None:
+    """Never crash on consoles/pipes that cannot encode emoji or arrows (e.g. Windows code pages)."""
+    for stream in (sys.stdout, sys.stderr):
+        enc = (getattr(stream, "encoding", None) or "").lower().replace("-", "")
+        if enc != "utf8" and hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(errors="replace")
+            except (ValueError, OSError):
+                pass
+
+
 def _print(data: Any) -> None:
     print(json.dumps(data, indent=2, ensure_ascii=False, default=str))
 
@@ -168,6 +179,7 @@ def cmd_validate_templates(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _safe_console()
     parser = argparse.ArgumentParser(prog="acs", description="AI Creative Studio")
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("hardware", help="Hardware analysieren und Profil bestimmen")
