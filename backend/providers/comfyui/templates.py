@@ -115,9 +115,10 @@ class ComfyTemplate(BaseModel):
                     options = type_def
                 elif type_def == "COMBO" and len(declared[base]) > 1 and isinstance(declared[base][1], dict):
                     options = declared[base][1].get("options")
-                # Model file lists depend on installed files → skip those.
+                # Model file lists and upload lists (input folder content) depend on the installation → skip.
                 if options and name not in {"ckpt_name", "unet_name", "clip_name", "vae_name", "lora_name",
-                                            "model_name", "image"} and value not in options:
+                                            "model_name", "control_net_name", "image", "file", "video",
+                                            "audio"} and value not in options:
                     errors.append(f"node {node_id} ({cls}).{name}: '{value}' not in {options[:8]}…")
             for req_name in spec.get("input", {}).get("required", {}):
                 if req_name not in node.get("inputs", {}):

@@ -96,6 +96,16 @@ Filter-Quoting bei FFmpeg-Titelkarten, SVG-Skalierung/Z-Fighting im 3D-Logo, Ble
 * Apple Silicon und AMD-Erkennung sind implementiert und per Unit-Test simuliert, nicht auf echter Hardware geprüft.
 * Remotion: Lizenzpflicht für Firmen > 3 Mitarbeitende.
 
+## Testergebnisse (2026-11-26)
+
+| Lauf | Ergebnis |
+|---|---|
+| Vollständige Suite mit Live-ComfyUI (`ACS_TEST_COMFYUI_URL` gesetzt) | **111 bestanden** (Unit, Integration, API, MCP, SSE, FFmpeg, Blender, Remotion, ComfyUI live, echte Modelle) |
+| Ohne Live-ComfyUI | Live-Modelltests werden übersprungen, Rest grün |
+| Dashboard-Smoke-Test (Playwright) | 17/17 |
+| `validate_claude_config.py` | 20 Dateien, keine Probleme |
+| `ruff check`, `tsc --noEmit` (Dashboard, Remotion) | sauber |
+
 ## Tests ausführen
 
 ```bash
